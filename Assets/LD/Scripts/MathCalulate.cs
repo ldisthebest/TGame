@@ -1,4 +1,5 @@
-﻿
+﻿using System.Collections.Generic;
+using UnityEngine;
 public class MathCalulate
 {
 
@@ -23,7 +24,7 @@ public class MathCalulate
     {
         if(min == max)
         {
-            if (elem[min] > target && min != 0) //特殊情况
+            if (elem[min] > target/* && min != 0*/) //特殊情况
                 return min - 1;
             else
                 return min;
@@ -45,9 +46,45 @@ public class MathCalulate
             return -1;
         }
         //折半查找的思想,返回介于两者之间较小的元素的下标
-        return HalfFind(elem, 0, elem.Length-1, target);
+        int result =  HalfFind(elem, 0, elem.Length-1, target);
+        //if (result+1<elem.Length && elem[result] == elem[result+1])//重合的话
+        //{
+        //    result = result + 1;    
+        //}
+        return result;
     }
 
+
+    private static void SortRelatedStepByY(List<FlatBoxStep> elem)
+    {
+        for (int times = 0; times < elem.Count - 1; times++)
+        {
+            for (int index = 0; index < elem.Count - times - 1; index++)
+            {
+                if (elem[index].maxY > elem[index + 1].maxY)
+                {
+                    FlatBoxStep max = elem[index];
+                    elem[index] = elem[index + 1];
+                    elem[index + 1] = max;
+                }
+            }
+        }
+    }
+    public static int GetExactlyLessIndex(List<FlatBoxStep> elem,float target)
+    {
+        SortRelatedStepByY(elem);
+        int i = 0;
+        while(i < elem.Count && target >= elem[i].maxY)
+        {
+            i++;
+        }
+        return i - 1;
+    }
+
+
+
+  
+    
 
 }
 
