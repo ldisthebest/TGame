@@ -7,7 +7,19 @@ public class Mask : MonoBehaviour {
     float halfWidth;
     [SerializeField]
     float halfHeight;
+
     [SerializeField]
+    float attachSpeed;
+
+    [HideInInspector]
+    BoxContour maskContour;
+
+    Vector3 attachPos;
+
+    bool getAttached;
+
+    bool hitted;
+
     Camera camer;
 
     [SerializeField]
@@ -21,7 +33,10 @@ public class Mask : MonoBehaviour {
     void Awake()
     {
         maskTransform = transform;
-        //playerTransform = playerAction.transform;
+        hitted = false;
+        getAttached = true;
+        camer = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
+        UpdateMaskContour();
     }
 
     public float GetMinX()
@@ -42,6 +57,14 @@ public class Mask : MonoBehaviour {
     public float GetMaxY()
     {
         return maskTransform.position.y + halfHeight;
+    }
+
+    public void UpdateMaskContour()
+    {
+        maskContour.BottomLeft = new Vector2(GetMinX(), GetMinY());
+        maskContour.BottomRight = new Vector2(GetMaxX(), GetMinY());
+        maskContour.TopLeft = new Vector2(GetMinX(), GetMaxY());
+        maskContour.TopRigtht = new Vector2(GetMaxX(), GetMaxY());
     }
 
     bool IsInRectangle(Vector2 pos)
@@ -79,9 +102,12 @@ public class Mask : MonoBehaviour {
         {
             if(Input.GetMouseButtonDown(0))
             {
+                
                 firstHitPos = camer.ScreenToWorldPoint(Input.mousePosition);
-                if(!IsInRectangle(firstHitPos)/* && playerAction.CurrentState != PlayerState.Idel*/)
+                if (!IsInRectangle(firstHitPos) || playerAction.CurrentState != PlayerState.Idel)
                     return;
+                Debug.Log("haha");
+                hitted = true;    
             }
             Vector2 newHitPos = camer.ScreenToWorldPoint(Input.mousePosition);
             if (!IsInRectangle(newHitPos))
@@ -98,8 +124,27 @@ public class Mask : MonoBehaviour {
             firstHitPos = newHitPos;
         }
 
-      
-       
+        if(Input.GetMouseButtonUp(0) && hitted)//松开鼠标
+        {
+            getAttached = false;
+            hitted = false;
+            Vector2 halfPos = MathCalulate.GetHalfVector2(maskTransform.position);
+            attachPos = new Vector3(halfPos.x, halfPos.y, -1);
+            Debug.Log("haha");
+        }
+
+        if(!getAttached)//吸附到指定位置
+        {
+            Vector3 pos = maskTransform.position;
+            maskTransform.position = Vector3.MoveTowards(pos, attachPos, Time.deltaTime * attachSpeed);
+            if(maskTransform.position == attachPos)
+            {
+                getAttached = true;
+            }
+            Debug.Log("haha");
+        }
+
+
 
 
     }

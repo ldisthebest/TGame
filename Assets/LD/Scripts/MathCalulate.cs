@@ -93,6 +93,14 @@ public class MathCalulate
         }       
     }
 
+    public static Vector2 GetHalfVector2(Vector2 pos)
+    {
+        float x = GetHalfValue(pos.x);
+        float y = GetHalfValue(pos.y);
+        return new Vector2(x, y);
+
+    }
+
   
     
 

@@ -350,13 +350,15 @@ GameObject:
   - component: {fileID: 278238432}
   - component: {fileID: 278238431}
   - component: {fileID: 278238426}
+  - component: {fileID: 278238427}
+  - component: {fileID: 278238428}
   m_Layer: 10
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &278238426
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -375,7 +377,35 @@ MonoBehaviour:
   moveSpeed: 5
   maxClimbHeight: 1
   maxFallHeight: 1
-  GetDestination: 0
+--- !u!95 &278238427
+Animator:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 278238425}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 57a7270ccb1594743b259f6d6fb0f897, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!114 &278238428
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 278238425}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c9c501d5641513498d9425a977d47dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!212 &278238431
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -451,7 +481,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &283152791
 Transform:
   m_ObjectHideFlags: 0
@@ -794,7 +824,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1403931123
 Transform:
   m_ObjectHideFlags: 0
@@ -952,7 +982,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1729625153}
   - component: {fileID: 1729625152}
-  - component: {fileID: 1729625151}
   - component: {fileID: 1729625150}
   - component: {fileID: 1729625154}
   m_Layer: 9
@@ -961,7 +990,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1729625150
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -973,40 +1002,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe4727e1105559f40b2b5be677d76670, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  halfWidth: 2.95
-  halfHeight: 2.95
-  camer: {fileID: 42076057}
-  playerAction: {fileID: 0}
---- !u!114 &1729625151
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1729625149}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f143abc44f1110046a20e45d6c698084, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maxClimbHeight: 2.2
-  playerHalfWidth: 0.5
-  playerHalfHeight: 0.5
-  maxFallHeight: 2.2
-  MovePoint: []
-  interval:
-  - minX: -9
-    maxX: -2
-    y: -1
-  - minX: -2
-    maxX: 3
-    y: -5
-  - minX: 3
-    maxX: 9
-    y: -1
-  maskInterval:
-  - minX: -9
-    maxX: 9
-    y: 1
+  halfWidth: 3
+  halfHeight: 3
+  attachSpeed: 10
+  playerAction: {fileID: 278238428}
 --- !u!212 &1729625152
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -1060,8 +1059,8 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1729625149}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.92, y: -0.03, z: -1}
-  m_LocalScale: {x: 1.3909507, y: 1.5001714, z: 1.52}
+  m_LocalPosition: {x: 0.48, y: -3.42, z: -1}
+  m_LocalScale: {x: 1.5, y: 1.5, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 5
@@ -1078,7 +1077,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: -0.79054016}
+  m_Offset: {x: 0, y: -1.0506968}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -1089,7 +1088,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 4, y: 2.4189196}
+  m_Size: {x: 4, y: 1.8986063}
   m_EdgeRadius: 0
 --- !u!1 &1801203583
 GameObject:

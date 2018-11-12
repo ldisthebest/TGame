@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
+public struct BoxContour
+{
+    public Vector2 TopLeft;
+    public Vector2 TopRigtht;
+    public Vector2 BottomLeft;
+    public Vector2 BottomRight;
+}
 public class PlayerController2D : MonoBehaviour {
    
-    //存储碰撞体信息
-    public struct PlayerContour
-    {
-        public Vector2 TopLeft;
-        public Vector2 TopRigtht;
-        public Vector2 BottomLeft;
-        public Vector2 BottomRight;
-    }
 
     Transform playerTransform;
     Camera mainCamera;
@@ -20,7 +20,7 @@ public class PlayerController2D : MonoBehaviour {
     float halfWidth, halfHeight;
 
     [HideInInspector]
-    public PlayerContour Contour;
+    public BoxContour Contour;
 
     [SerializeField,Range(0, 2)]
     float horizontalRayLength,verticalRayLength;
@@ -36,11 +36,14 @@ public class PlayerController2D : MonoBehaviour {
     List<Vector2> rotePoint;
     int pointIndex;
 
-public bool GetDestination;
+    bool GetDestination;
+
+    PlayerAction playerAction;
 
     void Awake()
     {
         playerTransform = transform;
+        playerAction = GetComponent<PlayerAction>();
         rotePoint = new List<Vector2>();
         GetDestination = true;
         mainCamera = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
@@ -92,6 +95,10 @@ public bool GetDestination;
         if(!GetDestination)
         {
             MoveToRotePoint();
+        }
+        else
+        {
+            playerAction.SetPlayerAnimation(PlayerState.Idel);
         }
 
 
@@ -198,18 +205,15 @@ public bool GetDestination;
         return Physics2D.Raycast(currentGetPos, GetRayDirection(), horizontalRayLength);
     }
 
-
     RaycastHit2D RayToUp(Vector2 currentGetPos)
     {
         return Physics2D.Raycast(currentGetPos, Vector2.up, verticalRayLength);
     }
 
-
     RaycastHit2D RayFromForwardToDown(Vector2 currentGetPos)
     {
         return Physics2D.Raycast(currentGetPos + GetRayDirection()*horizontalRayLength, Vector2.down, verticalRayLength);
     }
-
 
     RaycastHit2D RayToCheckClimb(Vector2 currentGetPos)
     {
@@ -224,19 +228,21 @@ public bool GetDestination;
 
     void MoveToRotePoint()
     {
+        playerAction.SetPlayerAnimation(PlayerState.Run);
         Vector2 currentPos = playerTransform.position;
         
         if (currentPos != rotePoint[pointIndex])
         {
             playerTransform.position = Vector2.MoveTowards(currentPos, rotePoint[pointIndex], Time.deltaTime * moveSpeed);
+            
+        }
+        else
+        {
             if ((Vector2)playerTransform.position == rotePoint[rotePoint.Count - 1])
             {
                 GetDestination = true;
                 return;
             }
-        }
-        else
-        {
             pointIndex++;
         }
     }
