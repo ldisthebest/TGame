@@ -6,7 +6,9 @@ public enum PlayerState
 {
     Idel = 0,
     Run = 1,
-    Climb = 2
+    Climb = 2,
+    Push = 3,
+    Pull = 4
 }
 
 public class PlayerAction : MonoBehaviour {

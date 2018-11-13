@@ -11,8 +11,7 @@ public class Mask : MonoBehaviour {
     [SerializeField]
     float attachSpeed;
 
-    [HideInInspector]
-    BoxContour maskContour;
+    Rectangle maskContour;
 
     Vector3 attachPos;
 
@@ -33,6 +32,7 @@ public class Mask : MonoBehaviour {
     void Awake()
     {
         maskTransform = transform;
+        playerTransform = playerAction.transform;
         hitted = false;
         getAttached = true;
         camer = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
@@ -61,10 +61,10 @@ public class Mask : MonoBehaviour {
 
     public void UpdateMaskContour()
     {
-        maskContour.BottomLeft = new Vector2(GetMinX(), GetMinY());
-        maskContour.BottomRight = new Vector2(GetMaxX(), GetMinY());
-        maskContour.TopLeft = new Vector2(GetMinX(), GetMaxY());
-        maskContour.TopRigtht = new Vector2(GetMaxX(), GetMaxY());
+        maskContour.minX = GetMinX();
+        maskContour.minY = GetMinY();
+        maskContour.maxX = GetMaxX();
+        maskContour.maxY = GetMaxY();
     }
 
     bool IsInRectangle(Vector2 pos)
@@ -106,7 +106,6 @@ public class Mask : MonoBehaviour {
                 firstHitPos = camer.ScreenToWorldPoint(Input.mousePosition);
                 if (!IsInRectangle(firstHitPos) || playerAction.CurrentState != PlayerState.Idel)
                     return;
-                Debug.Log("haha");
                 hitted = true;    
             }
             Vector2 newHitPos = camer.ScreenToWorldPoint(Input.mousePosition);
@@ -130,7 +129,6 @@ public class Mask : MonoBehaviour {
             hitted = false;
             Vector2 halfPos = MathCalulate.GetHalfVector2(maskTransform.position);
             attachPos = new Vector3(halfPos.x, halfPos.y, -1);
-            Debug.Log("haha");
         }
 
         if(!getAttached)//吸附到指定位置
@@ -141,7 +139,6 @@ public class Mask : MonoBehaviour {
             {
                 getAttached = true;
             }
-            Debug.Log("haha");
         }
 
 

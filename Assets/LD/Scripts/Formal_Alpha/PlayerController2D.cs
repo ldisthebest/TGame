@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public struct BoxContour
-{
-    public Vector2 TopLeft;
-    public Vector2 TopRigtht;
-    public Vector2 BottomLeft;
-    public Vector2 BottomRight;
-}
+//public struct BoxContour
+//{
+//    public Vector2 TopLeft;
+//    public Vector2 TopRigtht;
+//    public Vector2 BottomLeft;
+//    public Vector2 BottomRight;
+//}
 public class PlayerController2D : MonoBehaviour {
    
 
@@ -20,7 +20,7 @@ public class PlayerController2D : MonoBehaviour {
     float halfWidth, halfHeight;
 
     [HideInInspector]
-    public BoxContour Contour;
+    public Rectangle playerContour;
 
     [SerializeField,Range(0, 2)]
     float horizontalRayLength,verticalRayLength;
@@ -53,16 +53,19 @@ public class PlayerController2D : MonoBehaviour {
 
     private void UpdatePlayerContour()
     {
-        Contour.TopLeft = (Vector2)playerTransform.position + new Vector2(-halfWidth,halfHeight);
-        Contour.TopRigtht = (Vector2)playerTransform.position + new Vector2(halfWidth, halfHeight);
-        Contour.BottomLeft = (Vector2)playerTransform.position + new Vector2(-halfWidth, -halfHeight);
-        Contour.BottomRight = (Vector2)playerTransform.position + new Vector2(halfWidth, -halfHeight);
-#if UNITY_EDITOR
-        Debug.DrawLine(Contour.BottomLeft, Contour.BottomRight, Color.green);
-        Debug.DrawLine(Contour.BottomRight, Contour.TopRigtht, Color.green);
-        Debug.DrawLine(Contour.TopRigtht, Contour.TopLeft, Color.green);
-        Debug.DrawLine(Contour.TopLeft, Contour.BottomLeft, Color.green);
-#endif
+        playerContour.minX = playerTransform.position.x - halfWidth;
+        playerContour.maxX = playerTransform.position.x + halfWidth;
+        playerContour.minY = playerTransform.position.y - halfHeight;
+        playerContour.maxY = playerTransform.position.y + halfHeight;
+        //#if UNITY_EDITOR
+        //        Debug.DrawLine(Contour.BottomLeft, Contour.BottomRight, Color.green);
+        //        Debug.DrawLine(Contour.BottomRight, Contour.TopRigtht, Color.green);
+        //        Debug.DrawLine(Contour.TopRigtht, Contour.TopLeft, Color.green);
+        //        Debug.DrawLine(Contour.TopLeft, Contour.BottomLeft, Color.green);
+        //#endif
+
+
+
     }
 
     void SetInitialPos()
@@ -75,7 +78,7 @@ public class PlayerController2D : MonoBehaviour {
         if(hit.collider != null)
         {
             float colliderTopY = hit.collider.bounds.max.y;
-            playerTransform.position += Vector3.up * (colliderTopY - Contour.BottomLeft.y);           
+            playerTransform.position += Vector3.up * (colliderTopY - playerContour.minY);           
         }
         //float y = MathCalulate.GetHalfValue(playerTransform.position.y);
         //playerTransform.position = new Vector2(playerTransform.position.x,y);
