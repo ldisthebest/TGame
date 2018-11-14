@@ -39,6 +39,16 @@ public class PlayerController2D : MonoBehaviour {
     bool GetDestination;
 
     PlayerAction playerAction;
+    
+    /**************************************add by ld*****************/
+    [SerializeField]
+    Mask mask;
+
+    float targetX;
+
+    // bool hitMaskWhenPlayerMove;
+    bool hitMask = false;
+    /**************************************add by ld*****************/
 
     void Awake()
     {
@@ -46,33 +56,29 @@ public class PlayerController2D : MonoBehaviour {
         playerAction = GetComponent<PlayerAction>();
         rotePoint = new List<Vector2>();
         GetDestination = true;
+       // hitMaskWhenPlayerMove = false;
         mainCamera = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
        
         SetInitialPos();
     }
 
-    private void UpdatePlayerContour()
+    /**************************************add by ld*****************/
+    public Rectangle GetPlayerContour()
     {
         playerContour.minX = playerTransform.position.x - halfWidth;
         playerContour.maxX = playerTransform.position.x + halfWidth;
         playerContour.minY = playerTransform.position.y - halfHeight;
         playerContour.maxY = playerTransform.position.y + halfHeight;
-        //#if UNITY_EDITOR
-        //        Debug.DrawLine(Contour.BottomLeft, Contour.BottomRight, Color.green);
-        //        Debug.DrawLine(Contour.BottomRight, Contour.TopRigtht, Color.green);
-        //        Debug.DrawLine(Contour.TopRigtht, Contour.TopLeft, Color.green);
-        //        Debug.DrawLine(Contour.TopLeft, Contour.BottomLeft, Color.green);
-        //#endif
-
-
+        return playerContour;
 
     }
+    /**************************************add by ld*****************/
 
     void SetInitialPos()
     {
         float x = MathCalulate.GetHalfValue(playerTransform.position.x);
         playerTransform.position = new Vector2(x, playerTransform.position.y);
-        UpdatePlayerContour();
+        GetPlayerContour();/**************************************add by ld*****************/
 
         RaycastHit2D hit = Physics2D.Raycast(playerTransform.position,Vector2.down,20);
         if(hit.collider != null)
@@ -86,16 +92,58 @@ public class PlayerController2D : MonoBehaviour {
 
     void Update()
     {
-        if(Input.GetMouseButtonDown(0))
+        
+        if (Input.GetMouseButtonDown(0))
         {
             Vector2 hitPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
             //Debug.Log(hitPos);
-            float targetX = MathCalulate.GetHalfValue(hitPos.x);            
-            CaculateRote(targetX);
-            GetDestination = false;
-            pointIndex = 0;
+
+            /**************************************add by ld*****************/
+
+            targetX = MathCalulate.GetHalfValue(hitPos.x);
+
+            if (!mask.IsInRectangle(hitPos))
+            {
+                GetDestination = false;
+                CaculateRote(targetX);
+                pointIndex = 0;
+            }
+            else
+            {
+                hitMask = true;
+            }
+            //else if (playerAction.CurrentState != PlayerState.Idel)//如果在走路或跳跃的时候点到了mask就当啥也没发生
+            //{
+            //    hitMaskWhenPlayerMove = true;
+            //}
+
+            /**************************************add by ld*****************/
         }
-        if(!GetDestination)
+
+        /**************************************add by ld*****************/
+        if (Input.GetMouseButtonUp(0))
+        {
+            //if (hitMaskWhenPlayerMove)
+            //{
+            //    hitMaskWhenPlayerMove = false;
+            //    return;
+            //}
+
+            if (mask.hasDrag)
+            {
+                GetDestination = true;
+            }
+            else if(hitMask)
+            {
+                hitMask = false;
+                GetDestination = false;
+                CaculateRote(targetX);
+                pointIndex = 0; 
+            }
+        }
+        /**************************************add by ld*****************/
+
+        if (!GetDestination)
         {
             MoveToRotePoint();
         }
@@ -115,10 +163,6 @@ public class PlayerController2D : MonoBehaviour {
             }
         }      
 #endif 
-        //UpdatePlayerContour();
-        //RayToForward(playerTransform.position);
-        //RayToUp(playerTransform.position);
-        //RayToDown(playerTransform.position);
     }
 
     void SetPlayerTowards(float destinationX)

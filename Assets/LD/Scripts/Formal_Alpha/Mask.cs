@@ -11,7 +11,7 @@ public class Mask : MonoBehaviour {
     [SerializeField]
     float attachSpeed;
 
-    Rectangle maskContour;
+    public Rectangle maskContour;
 
     Vector3 attachPos;
 
@@ -23,20 +23,30 @@ public class Mask : MonoBehaviour {
 
     [SerializeField]
     PlayerAction playerAction;
-    Transform playerTransform;
+    PlayerController2D player;
 
     Transform maskTransform;
 
     Vector2 firstHitPos;
 
+    MaskCollider maskCollider;
+
+    [HideInInspector]
+    public bool hasDrag;
+
     void Awake()
     {
         maskTransform = transform;
-        playerTransform = playerAction.transform;
+        player = playerAction.GetComponent<PlayerController2D>();
         hitted = false;
         getAttached = true;
         camer = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
-        UpdateMaskContour();
+        GetMaskContour();
+        maskCollider = GetComponent<MaskCollider>();
+
+        hasDrag = false;
+        //test
+
     }
 
     public float GetMinX()
@@ -59,15 +69,16 @@ public class Mask : MonoBehaviour {
         return maskTransform.position.y + halfHeight;
     }
 
-    public void UpdateMaskContour()
+    public Rectangle GetMaskContour()
     {
         maskContour.minX = GetMinX();
         maskContour.minY = GetMinY();
         maskContour.maxX = GetMaxX();
         maskContour.maxY = GetMaxY();
+        return maskContour;
     }
 
-    bool IsInRectangle(Vector2 pos)
+    public bool IsInRectangle(Vector2 pos)
     {
         float x = pos.x;
         float y = pos.y;
@@ -78,71 +89,77 @@ public class Mask : MonoBehaviour {
         return false;
     }
 
-    //bool IfIntersectionWithPlayer(Vector2 pos)
-    //{
-    //    float minX = pos.x - halfWidth;
-    //    float maxX = pos.x + halfWidth;
-    //    float minY = pos.y - halfHeight;
-    //    float maxY = pos.y + halfWidth;
-    //    bool left = minX <= playerTransform.position.x + MapNavigation.Instance.playerHalfWidth && minX >= playerTransform.position.x - MapNavigation.Instance.playerHalfWidth;
-    //    bool right = maxX <= playerTransform.position.x + MapNavigation.Instance.playerHalfWidth && maxX >= playerTransform.position.x - MapNavigation.Instance.playerHalfWidth;
-    //    bool bottom = minY <= playerTransform.position.y + MapNavigation.Instance.playerHalfHeight && minY >= playerTransform.position.y - MapNavigation.Instance.playerHalfHeight;
-    //    bool top = maxY <= playerTransform.position.y + MapNavigation.Instance.playerHalfHeight && maxY >= playerTransform.position.y - MapNavigation.Instance.playerHalfHeight;
-    //    if (left || right || bottom || top)
-    //    {
-    //        return true;
-    //    }
-    //    return false;
-    //}
-   
+    bool IfIntersectionWithPlayer(Vector2 pos)
+    {
+        Rectangle maskAboutRect;
+        maskAboutRect.minX = pos.x - halfWidth;
+        maskAboutRect.maxX = pos.x + halfWidth;
+        maskAboutRect.minY = pos.y - halfHeight;
+        maskAboutRect.maxY = pos.y + halfWidth;
+
+        if (MathCalulate.ConvergenceRectangle(maskAboutRect, player.GetPlayerContour()) != null)
+        {
+            return true;
+        }
+        return false;
+    }
+
+
     void Update()
     {
 
-        if (Input.GetMouseButton(0))
+        if (Input.GetMouseButtonDown(0))
         {
-            if(Input.GetMouseButtonDown(0))
+
+            firstHitPos = camer.ScreenToWorldPoint(Input.mousePosition);
+            if (!IsInRectangle(firstHitPos) || playerAction.CurrentState != PlayerState.Idel)
             {
-                
-                firstHitPos = camer.ScreenToWorldPoint(Input.mousePosition);
-                if (!IsInRectangle(firstHitPos) || playerAction.CurrentState != PlayerState.Idel)
-                    return;
-                hitted = true;    
-            }
-            Vector2 newHitPos = camer.ScreenToWorldPoint(Input.mousePosition);
-            if (!IsInRectangle(newHitPos))
+                // dragOffoset = Vector2.zero;
                 return;
+            }
 
-            Vector2 offoset = newHitPos - firstHitPos;
-            Vector2 maskAboutToPos = (Vector2)maskTransform.position + offoset;
-            //if(IfIntersectionWithPlayer(maskAboutToPos))
-            //{
-            //    //soffoset = Vector2.zero;
-            //}
-
-            maskTransform.Translate(offoset);
-            firstHitPos = newHitPos;
+            hitted = true;
         }
-
-        if(Input.GetMouseButtonUp(0) && hitted)//松开鼠标
+        if(hitted)
         {
-            getAttached = false;
-            hitted = false;
-            Vector2 halfPos = MathCalulate.GetHalfVector2(maskTransform.position);
-            attachPos = new Vector3(halfPos.x, halfPos.y, -1);
+            Vector2 newHitPos = camer.ScreenToWorldPoint(Input.mousePosition);
+            Vector2 dragOffoset = newHitPos - firstHitPos;
+            if(dragOffoset != Vector2.zero)
+            {
+                hasDrag = true;
+            }
+            Vector2 maskAboutToPos = (Vector2)maskTransform.position + dragOffoset;
+            if (IfIntersectionWithPlayer(maskAboutToPos))
+            {
+                dragOffoset = Vector2.zero;
+            }
+
+            maskTransform.Translate(dragOffoset);
+            firstHitPos = newHitPos;
+
+            if(Input.GetMouseButtonUp(0)) //松开鼠标
+            {
+                hitted = false;
+                if (hasDrag)
+                {
+                    getAttached = false;
+                    Vector2 halfPos = MathCalulate.GetHalfVector2(maskTransform.position);
+                    attachPos = new Vector3(halfPos.x, halfPos.y, -1);
+                }             
+            }
         }
 
-        if(!getAttached)//吸附到指定位置
+        if (!getAttached)//吸附到指定位置
         {
             Vector3 pos = maskTransform.position;
             maskTransform.position = Vector3.MoveTowards(pos, attachPos, Time.deltaTime * attachSpeed);
-            if(maskTransform.position == attachPos)
+            if (maskTransform.position == attachPos)
             {
+                hasDrag = false;
                 getAttached = true;
+                maskCollider.UpdateLandformCollider(GetMaskContour());
             }
         }
-
-
-
 
     }
 }

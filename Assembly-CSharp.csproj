@@ -56,9 +56,10 @@
   <ItemGroup>
     <Compile Include="Assets\LD\LLD\Scripts\CommandMove.cs" />
     <Compile Include="Assets\LD\Scripts\Formal_Alpha\Mask.cs" />
+    <Compile Include="Assets\LD\Scripts\Formal_Alpha\MaskCollider.cs" />
+    <Compile Include="Assets\LD\Scripts\Formal_Alpha\MathCalulate.cs" />
     <Compile Include="Assets\LD\Scripts\Formal_Alpha\PlayerAction.cs" />
     <Compile Include="Assets\LD\Scripts\Formal_Alpha\PlayerController2D.cs" />
-    <Compile Include="Assets\LD\Scripts\MathCalulate.cs" />
     <Reference Include="UnityEditor.StandardEvents">
       <HintPath>F:/LD_project/TGame/Library/ScriptAssemblies/UnityEditor.StandardEvents.dll</HintPath>
     </Reference>
