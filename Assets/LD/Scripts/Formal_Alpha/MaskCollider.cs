@@ -25,6 +25,14 @@ public class MaskCollider : MonoBehaviour {
         colliderSoldier = Resources.Load(colliderSoldierPath, typeof(GameObject));
     }
 
+    void ClearColliderSoldiers()
+    {
+        for(int i = 0;i<colliderSoldiers.Count;i++)
+        {
+            Destroy(colliderSoldiers[i]);
+        }
+        colliderSoldiers.Clear();
+    }
 
     void InitRectangle()
     {
@@ -49,7 +57,7 @@ public class MaskCollider : MonoBehaviour {
 
     public void UpdateLandformCollider(Rectangle maskRectangle)
     {
-       
+        ClearColliderSoldiers();
         for (int i = 0; i < insideBox.Length; i++)
         {
             Rectangle? ConvergenceRect = MathCalulate.ConvergenceRectangle(insideBox[i], maskRectangle);
@@ -66,9 +74,11 @@ public class MaskCollider : MonoBehaviour {
 
         for(int i = 0; i< outsideBox.Length;i++)
         {
-
+            SetOutsideColliderPos(outsideLandform[i], outsideBox[i], maskRectangle);
         }
     }
+
+
 
     void SetColliderBounds(BoxCollider2D collider,Rectangle colliderRect,Rectangle rect)
     {
@@ -92,7 +102,13 @@ public class MaskCollider : MonoBehaviour {
         if(ifConvergence != null) //相交
         {
             landformCollider.enabled = false;
+            Rectangle convergenceRect = ifConvergence.Value;
+            List<Rectangle> soldierRects = MathCalulate.GetColliderSoldierArea(colliderRect, convergenceRect);
 
+            for(int i =0;i<soldierRects.Count;i++)
+            {
+                SetSoldierCollider(soldierRects[i]);
+            }
         }
         else
         {
@@ -104,7 +120,8 @@ public class MaskCollider : MonoBehaviour {
     {
         GameObject soldier = Instantiate(colliderSoldier, Vector3.zero, Quaternion.identity) as GameObject;
         soldier.transform.position = new Vector2((rect.minX + rect.maxX) / 2, (rect.minY + rect.maxY) / 2);
-        soldier.GetComponent<BoxCollider2D>().size = new Vector2(rect.maxX - rect.minX,rect.maxY-rect.minY);
+        soldier.transform.localScale = new Vector2(rect.maxX - rect.minX,rect.maxY-rect.minY);
+        colliderSoldiers.Add(soldier);
     }
 
 //    void Update()

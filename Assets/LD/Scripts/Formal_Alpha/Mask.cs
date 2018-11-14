@@ -104,6 +104,17 @@ public class Mask : MonoBehaviour {
         return false;
     }
 
+    public bool IfPointAtBorderY(Vector2 point)
+    {
+        if(point.x >= GetMinX() && point.x <= GetMaxX())
+        {
+            if(point.y == GetMinY() || point.y == GetMaxY())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
     void Update()
     {
@@ -145,6 +156,27 @@ public class Mask : MonoBehaviour {
                     getAttached = false;
                     Vector2 halfPos = MathCalulate.GetHalfVector2(maskTransform.position);
                     attachPos = new Vector3(halfPos.x, halfPos.y, -1);
+
+                    if(IfIntersectionWithPlayer(attachPos))
+                    {
+                        if(!IfIntersectionWithPlayer(attachPos + Vector3.right))
+                        {
+                            attachPos += Vector3.right;
+                        }
+                        else if(!IfIntersectionWithPlayer(attachPos - Vector3.right))
+                        {
+                            attachPos -= Vector3.right;
+                        }
+                        else if(!IfIntersectionWithPlayer(attachPos + Vector3.up))
+                        {
+                            attachPos += Vector3.up;
+                        }
+                        else if(!IfIntersectionWithPlayer(attachPos - Vector3.up))
+                        {
+                            attachPos -= Vector3.up;
+                        }
+
+                    }
                 }             
             }
         }

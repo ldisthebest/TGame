@@ -10,6 +10,14 @@ using UnityEngine;
 //    public Vector2 BottomLeft;
 //    public Vector2 BottomRight;
 //}
+public enum LandBox
+{
+    none = 0,
+    rigthHalf = 1,
+    leftHalf = 2,
+    whole = 3
+} 
+
 public class PlayerController2D : MonoBehaviour {
    
 
@@ -43,6 +51,9 @@ public class PlayerController2D : MonoBehaviour {
     /**************************************add by ld*****************/
     [SerializeField]
     Mask mask;
+
+    [SerializeField, Range(0, 1)]
+    float shortHorizontalRayLength;
 
     float targetX;
 
@@ -86,8 +97,8 @@ public class PlayerController2D : MonoBehaviour {
             float colliderTopY = hit.collider.bounds.max.y;
             playerTransform.position += Vector3.up * (colliderTopY - playerContour.minY);           
         }
-        //float y = MathCalulate.GetHalfValue(playerTransform.position.y);
-        //playerTransform.position = new Vector2(playerTransform.position.x,y);
+        float y = MathCalulate.GetHalfValue(playerTransform.position.y);
+        playerTransform.position = new Vector2(playerTransform.position.x, y);
     }
 
     void Update()
@@ -95,17 +106,23 @@ public class PlayerController2D : MonoBehaviour {
         
         if (Input.GetMouseButtonDown(0))
         {
+            if(playerAction.CurrentState == PlayerState.Climb)
+            {
+                return;
+            }
+
             Vector2 hitPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            targetX = hitPos.x;
             //Debug.Log(hitPos);
 
             /**************************************add by ld*****************/
 
-            targetX = MathCalulate.GetHalfValue(hitPos.x);
+            //targetX = MathCalulate.GetHalfValue(hitPos.x);
 
             if (!mask.IsInRectangle(hitPos))
             {
                 GetDestination = false;
-                CaculateRote(targetX);
+                CaculateRote();
                 pointIndex = 0;
             }
             else
@@ -137,7 +154,7 @@ public class PlayerController2D : MonoBehaviour {
             {
                 hitMask = false;
                 GetDestination = false;
-                CaculateRote(targetX);
+                CaculateRote();
                 pointIndex = 0; 
             }
         }
@@ -175,15 +192,21 @@ public class PlayerController2D : MonoBehaviour {
         }
     }
 
-    void CaculateRote(float targetX)
+    void CaculateRote()
     {
         rotePoint.Clear();
+        UpdateTargetX(ref targetX);
         SetPlayerTowards(targetX);
         Vector2 playerPos = playerTransform.position;
         Vector2 currentGetPos = new Vector2(MathCalulate.GetHalfValue(playerPos.x), playerPos.y);
 
         while(currentGetPos.x != targetX)
         {
+            if(IfMaskVertexBlockInLand(currentGetPos)) //主角遇到了底片顶点
+            {
+                currentGetPos -= GetRayDirection();
+                break;
+            }
             RaycastHit2D climbHit = RayToForward(currentGetPos);
             if (climbHit.collider == null)//前方无障碍
             {
@@ -197,8 +220,15 @@ public class PlayerController2D : MonoBehaviour {
                     }
                     else//能跳下去
                     {
-                        float colliderTopY = fallHit.collider.bounds.max.y;
+                        //float colliderTopY = fallHit.collider.bounds.max.y;
                         currentGetPos += new Vector2(GetRayDirection().x*1, -1);//这个1是移动一个格子
+                        /*************************add by ld**********************/
+                        if (mask.IfPointAtBorderY(MathCalulate.GetHalfVector2(currentGetPos)))
+                        {
+                            currentGetPos -= new Vector2(GetRayDirection().x * 1, -1);
+                            break;
+                        }
+                        /*************************add by ld**********************/
                         rotePoint.Add(currentGetPos);
                     }
                 }
@@ -214,8 +244,15 @@ public class PlayerController2D : MonoBehaviour {
                 {
                     if(RayToCheckClimb(currentGetPos).collider == null)//能爬上去
                     {
-                        float colliderTopY = climbHit.collider.bounds.max.y;
+                        //float colliderTopY = climbHit.collider.bounds.max.y;
                         currentGetPos += new Vector2(GetRayDirection().x * 1, 1);
+                        /*************************add by ld**********************/
+                        if(mask.IfPointAtBorderY(MathCalulate.GetHalfVector2(currentGetPos)))
+                        {
+                            currentGetPos -= new Vector2(GetRayDirection().x * 1, 1);
+                            break;
+                        }
+                        /*************************add by ld**********************/
                         rotePoint.Add(currentGetPos);
                     }
                     else//不能爬上去
@@ -259,7 +296,7 @@ public class PlayerController2D : MonoBehaviour {
 
     RaycastHit2D RayFromForwardToDown(Vector2 currentGetPos)
     {
-        return Physics2D.Raycast(currentGetPos + GetRayDirection()*horizontalRayLength, Vector2.down, verticalRayLength);
+        return Physics2D.Raycast(currentGetPos + GetRayDirection() * horizontalRayLength, Vector2.down, verticalRayLength);
     }
 
     RaycastHit2D RayToCheckClimb(Vector2 currentGetPos)
@@ -270,14 +307,25 @@ public class PlayerController2D : MonoBehaviour {
     RaycastHit2D RayToCheckFall(Vector2 currentGetPos)
     {
         return Physics2D.Raycast(currentGetPos + GetRayDirection() * horizontalRayLength + Vector2.down * verticalRayLength,
-            Vector2.down, verticalRayLength);
+            Vector2.down, maxFallHeight); 
     }
 
     void MoveToRotePoint()
     {
-        playerAction.SetPlayerAnimation(PlayerState.Run);
+      
+       
         Vector2 currentPos = playerTransform.position;
-        
+
+        if ((pointIndex > 0 && rotePoint[pointIndex].y != rotePoint[pointIndex - 1].y)
+               || (rotePoint.Count > 0 && pointIndex == 0 && rotePoint[0].y != currentPos.y))
+        {
+            playerAction.SetPlayerAnimation(PlayerState.Climb);
+        }
+        else
+        {
+            playerAction.SetPlayerAnimation(PlayerState.Run);
+        }
+
         if (currentPos != rotePoint[pointIndex])
         {
             playerTransform.position = Vector2.MoveTowards(currentPos, rotePoint[pointIndex], Time.deltaTime * moveSpeed);
@@ -293,4 +341,288 @@ public class PlayerController2D : MonoBehaviour {
             pointIndex++;
         }
     }
+
+
+    /************add by ld****************/
+    void UpdateTargetX(ref float targetX)
+    {
+        float x = MathCalulate.GetHalfValue(targetX);
+        if((x == mask.GetMinX() || x == mask.GetMaxX()))//点到了底片边界
+        {
+            float y = MathCalulate.GetHalfValue(playerTransform.position.y);
+            if(y >= mask.GetMinY() && y <= mask.GetMaxY())
+            {
+                if (targetX < mask.GetMinX() || (x == mask.GetMaxX() && targetX < mask.GetMaxX()))
+                {
+                    x--;
+                }
+                else
+                {
+                    x++;
+                }
+            }
+            
+        }
+        targetX = x;
+        
+    }
+
+    bool IfMaskVertexBlockInLand(Vector2 landPos)
+    {
+        landPos = MathCalulate.GetHalfVector2(landPos);
+        Vector2[] vertex =
+        {
+            new Vector2(mask.GetMinX(),mask.GetMinY()),
+            new Vector2(mask.GetMinX(),mask.GetMaxY()),
+            new Vector2(mask.GetMaxX(),mask.GetMinY()),
+            new Vector2(mask.GetMaxX(),mask.GetMaxY())
+        };
+        for(int i = 0;i<vertex.Length;i++)
+        {
+            if(vertex[i] == landPos)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    LandBox TwoRayToForward(Vector2 currentGetPos)
+    {
+        RaycastHit2D shortRay = Physics2D.Raycast(currentGetPos, GetRayDirection(), shortHorizontalRayLength);
+        RaycastHit2D longRay =  Physics2D.Raycast(currentGetPos, GetRayDirection(), horizontalRayLength);
+        if(shortRay.collider == null && longRay.collider == null)
+        {
+            return LandBox.none;
+        }
+        else if(shortRay.collider != null && longRay.collider != null)
+        {
+            return LandBox.whole;
+        }
+        else if(shortRay.collider == null && longRay.collider != null)
+        {
+            return GetRayDirection() == Vector2.right ? LandBox.rigthHalf : LandBox.leftHalf;
+        }
+        else
+        {
+            return GetRayDirection() == Vector2.left ? LandBox.rigthHalf : LandBox.leftHalf;
+        }
+    }
+
+    LandBox TwoRayFromForwardToDown(Vector2 currentGetPos)
+    {
+        RaycastHit2D shortRay = Physics2D.Raycast(currentGetPos + GetRayDirection() * shortHorizontalRayLength, Vector2.down, verticalRayLength);
+        RaycastHit2D longRay = Physics2D.Raycast(currentGetPos + GetRayDirection() * horizontalRayLength, Vector2.down, verticalRayLength);
+        if (shortRay.collider == null && longRay.collider == null)
+        {
+            return LandBox.none;
+        }
+        else if (shortRay.collider != null && longRay.collider != null)
+        {
+            return LandBox.whole;
+        }
+        else if (shortRay.collider == null && longRay.collider != null)
+        {
+            return GetRayDirection() == Vector2.right ? LandBox.rigthHalf : LandBox.leftHalf;
+        }
+        else
+        {
+            return GetRayDirection() == Vector2.left ? LandBox.rigthHalf : LandBox.leftHalf;
+        }
+    }
+
+    LandBox TwoRayToCheckFall(Vector2 currentGetPos)
+    {
+        RaycastHit2D shortRay = Physics2D.Raycast(currentGetPos + GetRayDirection() * shortHorizontalRayLength + Vector2.down * verticalRayLength,
+            Vector2.down, maxFallHeight);
+        RaycastHit2D longRay = Physics2D.Raycast(currentGetPos + GetRayDirection() * horizontalRayLength + Vector2.down * verticalRayLength,
+            Vector2.down, maxFallHeight);
+        if(shortRay.collider != null && longRay.collider != null)
+        {
+            return LandBox.whole;
+        }
+        else
+        {
+            return LandBox.none;
+        }
+    }
+
+    void CaculateRoute()
+    {
+        rotePoint.Clear();
+        UpdateTargetX(ref targetX);
+        SetPlayerTowards(targetX);
+        Vector2 playerPos = playerTransform.position;
+        //Vector2 currentGetPos = new Vector2(MathCalulate.GetHalfValue(playerPos.x), playerPos.y);
+        Vector2 currentGetPos = MathCalulate.GetHalfVector2(playerPos);
+
+        while (currentGetPos.x != targetX)
+        {
+            if (IfMaskVertexBlockInLand(currentGetPos)) //主角遇到了底片顶点
+            {
+                currentGetPos -= GetRayDirection();
+                break;
+            }
+            LandBox forwardBox = TwoRayToForward(currentGetPos);
+            if (forwardBox == LandBox.none)//前方无障碍
+            {
+                LandBox pit = TwoRayFromForwardToDown(currentGetPos);
+                if (pit == LandBox.none)//前方有坑
+                {
+                    rotePoint.Add(currentGetPos);
+                    if (TwoRayToCheckFall(currentGetPos) == LandBox.none)//跳不下去
+                    {
+                        break;
+                    }
+                    else//能跳下去
+                    {
+                        currentGetPos += new Vector2(GetRayDirection().x * 1, -1);//这个1是移动一个格子
+                        if (mask.IfPointAtBorderY(currentGetPos))
+                        {
+                            currentGetPos -= new Vector2(GetRayDirection().x * 1, -1);
+                            break;
+                        }
+                        rotePoint.Add(currentGetPos);
+                    }
+                }
+                else if(pit == LandBox.whole)//前方无坑可以直接走
+                {
+                    currentGetPos = currentGetPos + GetRayDirection() * 1f;
+                }
+                else//前方是个半坑
+                {
+                    break;
+                }
+            }
+            else if(forwardBox == LandBox.whole)//前方有整格障碍
+            {
+                rotePoint.Add(currentGetPos);
+                if (RayToUp(currentGetPos).collider == null)//头顶无障碍
+                {
+                    if (mask.IfPointAtBorderY(currentGetPos + Vector2.up)) //主角的头顶接近底片
+                    {
+                        break;
+                    }
+                    if (RayToCheckClimb(currentGetPos).collider == null)//能爬上去/*************可能会卡住************/
+                    {
+
+                        currentGetPos += new Vector2(GetRayDirection().x * 1, 1);
+
+                        if (mask.IfPointAtBorderY(currentGetPos))
+                        {
+                            currentGetPos -= new Vector2(GetRayDirection().x * 1, 1);
+                            break;
+                        }
+                        rotePoint.Add(currentGetPos);
+                    }
+                    else//不能爬上去
+                    {
+                        break;
+                    }
+                }
+                else//头顶有障碍
+                {
+                    break;
+                }
+            }
+            else//前方有半格障碍
+            {
+                if(GetRayDirection() == Vector2.right && forwardBox == LandBox.rigthHalf)
+                {
+                    LandBox pit = TwoRayFromForwardToDown(currentGetPos);
+                    if (pit == LandBox.rigthHalf || pit == LandBox.none)
+                    {
+                        break;
+                    }
+                    else //判断能不能跳上去，和前面代码一样
+                    {
+                        rotePoint.Add(currentGetPos);
+                        if (RayToUp(currentGetPos).collider == null)//头顶无障碍
+                        {
+                            if (mask.IfPointAtBorderY(currentGetPos + Vector2.up)) //主角的头顶接近底片
+                            {
+                                break;
+                            }
+                            if (RayToCheckClimb(currentGetPos).collider == null)//能爬上去/*************可能会卡住************/
+                            {
+
+                                currentGetPos += new Vector2(GetRayDirection().x * 1, 1);
+
+                                if (mask.IfPointAtBorderY(currentGetPos))
+                                {
+                                    currentGetPos -= new Vector2(GetRayDirection().x * 1, 1);
+                                    break;
+                                }
+                                rotePoint.Add(currentGetPos);
+                            }
+                            else//不能爬上去
+                            {
+                                break;
+                            }
+                        }
+                        else//头顶有障碍
+                        {
+                            break;
+                        }
+                    }
+                }
+                else if(GetRayDirection() == Vector2.left && forwardBox == LandBox.leftHalf)
+                {
+                    LandBox pit = TwoRayFromForwardToDown(currentGetPos);
+                    if (pit == LandBox.leftHalf || pit == LandBox.none)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        //和上面一样
+                        rotePoint.Add(currentGetPos);
+                        if (RayToUp(currentGetPos).collider == null)//头顶无障碍
+                        {
+                            if (mask.IfPointAtBorderY(currentGetPos + Vector2.up)) //主角的头顶接近底片
+                            {
+                                break;
+                            }
+                            if (RayToCheckClimb(currentGetPos).collider == null)//能爬上去/*************可能会卡住************/
+                            {
+
+                                currentGetPos += new Vector2(GetRayDirection().x * 1, 1);
+
+                                if (mask.IfPointAtBorderY(currentGetPos))
+                                {
+                                    currentGetPos -= new Vector2(GetRayDirection().x * 1, 1);
+                                    break;
+                                }
+                                rotePoint.Add(currentGetPos);
+                            }
+                            else//不能爬上去
+                            {
+                                break;
+                            }
+                        }
+                        else//头顶有障碍
+                        {
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    break;//其他情况寻路结束
+                }
+            }
+        }
+
+
+        if (rotePoint.Count == 0 || rotePoint[rotePoint.Count - 1] != currentGetPos)
+        {
+            rotePoint.Add(currentGetPos);//添加终点
+        }
+
+        //更新卡住了的点TODO,可能会导致list长度为0
+       
+
+    }
+    /************add by ld****************/
+
 }
