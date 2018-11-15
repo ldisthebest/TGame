@@ -183,6 +183,12 @@ public class MathCalulate
             rectSoldier.minY = convergenceRect.maxY; rectSoldier.maxY = rect.maxY;
             rectSoldiers.Add(rectSoldier);
         }
+        if(convergenceRect.minY > rect.minY)
+        {
+            rectSoldier.minX = convergenceRect.minX; rectSoldier.maxX = convergenceRect.maxX;
+            rectSoldier.minY = rect.minY; rectSoldier.maxY = convergenceRect.minY;
+            rectSoldiers.Add(rectSoldier);
+        }
 
         return rectSoldiers;
     }

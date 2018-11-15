@@ -42,6 +42,15 @@ public class PlayerAction : MonoBehaviour {
             case PlayerState.Climb:
                 animator.Play("Climb");
                 break;
+
+            /************************add by lld***********************/
+            case PlayerState.Push:
+                animator.Play("Push");
+                break;
+            //暂无拉箱子动画，以推箱子动画代替
+            case PlayerState.Pull:
+                animator.Play("Push");
+                break;
         }
     }
 	

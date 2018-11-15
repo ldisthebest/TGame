@@ -36,6 +36,10 @@ public class PlayerController2D : MonoBehaviour {
     [SerializeField]
     float moveSpeed;
 
+    //------------------------------------- add by lld -----------------------------------------
+    [SerializeField]
+    float pushSpeed;
+
     [SerializeField]
     float maxClimbHeight,maxFallHeight;
 
@@ -50,7 +54,7 @@ public class PlayerController2D : MonoBehaviour {
     
     /**************************************add by ld*****************/
     [SerializeField]
-    Mask mask;
+    public Mask mask;
 
     [SerializeField, Range(0, 1)]
     float shortHorizontalRayLength;
@@ -103,8 +107,8 @@ public class PlayerController2D : MonoBehaviour {
 
     void Update()
     {
-        
-        if (Input.GetMouseButtonDown(0))
+        //-------------------------------- this line has been changed ----------------------------------------
+        if (Input.GetMouseButtonDown(0) && !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
         {
             if(playerAction.CurrentState == PlayerState.Climb)
             {
@@ -118,6 +122,23 @@ public class PlayerController2D : MonoBehaviour {
             /**************************************add by ld*****************/
 
             //targetX = MathCalulate.GetHalfValue(hitPos.x);
+
+            //----------------------------------------- add by lld -----------------------------------------------
+            //作用是，点击空白地方，结束推箱子移动效果。卡格子（待优化），结束移动。
+            if (transform.childCount != 0)
+            {
+                Transform box = transform.GetChild(0);
+                Vector3 gridCenter = new Vector3(MathCalulate.GetHalfValue(box.position.x), MathCalulate.GetHalfValue(box.position.y), box.position.z);
+                if (!mask.IfPointAtBorderX(gridCenter))
+                {
+                   
+                    box.GetComponent<Box>().boxUI.EndMove();
+                    box.position = gridCenter;
+                    GetDestination = true;
+                    //return;
+                }
+                return;
+            }
 
             if (!mask.IsInRectangle(hitPos))
             {
@@ -166,6 +187,12 @@ public class PlayerController2D : MonoBehaviour {
         }
         else
         {
+            //------------------------------------------- add by lld ----------------------------------------------
+            if (transform.childCount != 0)
+            {
+                transform.GetChild(0).gameObject.GetComponent<Box>().boxUI.EndMove();
+            }
+
             playerAction.SetPlayerAnimation(PlayerState.Idel);
         }
 
@@ -182,7 +209,7 @@ public class PlayerController2D : MonoBehaviour {
 #endif 
     }
 
-    void SetPlayerTowards(float destinationX)
+    public void SetPlayerTowards(float destinationX)
     {
         float offoset = destinationX - playerTransform.position.x;
         float scale = playerTransform.localScale.x;
@@ -224,7 +251,7 @@ public class PlayerController2D : MonoBehaviour {
 
                         currentGetPos += new Vector2(GetRayDirection().x*1, -1);//这个1是移动一个格子
                         /*************************add by ld**********************/
-                        if (mask.IfPointAtBorderY(currentGetPos) || mask.IfPosJustOnBorderTop(currentGetPos))
+                        if (mask.IfPointAtBorderY(currentGetPos) || mask.IfPosJustOnBorderTop(currentGetPos) ||mask.IfPointAtBorderY(currentGetPos - GetRayDirection()))
                         {
                             currentGetPos -= new Vector2(GetRayDirection().x * 1, -1);
                             break;
@@ -240,20 +267,21 @@ public class PlayerController2D : MonoBehaviour {
             }
             else//前方有障碍
             {
-                rotePoint.Add(currentGetPos);
+                //rotePoint.Add(currentGetPos);
                 if (RayToUp(currentGetPos).collider == null)//头顶无障碍
                 {
                     if(RayToCheckClimb(currentGetPos).collider == null)//能爬上去
                     {
+                        rotePoint.Add(currentGetPos);
                         //float colliderTopY = climbHit.collider.bounds.max.y;
-                        currentGetPos += new Vector2(GetRayDirection().x * 1, 1);
+                        //currentGetPos += Vector2.up;
                         /*************************add by ld**********************/
-                        if(mask.IfPointAtBorderY(MathCalulate.GetHalfVector2(currentGetPos)))
+                        if(mask.IfPointAtBorderY(MathCalulate.GetHalfVector2(currentGetPos + Vector2.up)))
                         {
-                            currentGetPos -= new Vector2(GetRayDirection().x * 1, 1);
                             break;
                         }
                         /*************************add by ld**********************/
+                        currentGetPos += Vector2.up + GetRayDirection();
                         rotePoint.Add(currentGetPos);
                     }
                     else//不能爬上去
@@ -277,6 +305,11 @@ public class PlayerController2D : MonoBehaviour {
         if (mask.IfPointAtBorderX(lastPos))
         {
             rotePoint.RemoveAt(rotePoint.Count - 1);
+            if(rotePoint.Count == 0)
+            {
+                rotePoint.Add(lastPos - GetRayDirection());
+                return;
+            }
             Vector2 lastSecondPos = rotePoint[rotePoint.Count - 1];
             if(lastPos.x == lastSecondPos.x || lastPos.y == lastSecondPos.y)//非跳的情况要加回去
             {
@@ -330,13 +363,23 @@ public class PlayerController2D : MonoBehaviour {
             GetDestination = true;
             return;
         }
-       
+
+        //-------------------------------------------- changed by lld ---------------------------------------------
+        float speed = moveSpeed;
         Vector2 currentPos = playerTransform.position;
 
         if ((pointIndex > 0 && rotePoint[pointIndex].y != rotePoint[pointIndex - 1].y)
                || (rotePoint.Count > 0 && pointIndex == 0 && rotePoint[0].y != currentPos.y))
         {
             playerAction.SetPlayerAnimation(PlayerState.Climb);
+        }
+        else if(transform.childCount != 0)
+        {
+            speed = pushSpeed;
+            if (transform.GetChild(0).GetComponent<Box>().IsPush)
+                playerAction.SetPlayerAnimation(PlayerState.Push);
+            else
+                playerAction.SetPlayerAnimation(PlayerState.Pull);
         }
         else
         {
@@ -345,13 +388,14 @@ public class PlayerController2D : MonoBehaviour {
 
         if (currentPos != rotePoint[pointIndex])
         {
-            playerTransform.position = Vector2.MoveTowards(currentPos, rotePoint[pointIndex], Time.deltaTime * moveSpeed);
+            playerTransform.position = Vector2.MoveTowards(currentPos, rotePoint[pointIndex], Time.deltaTime * speed);
             
         }
         else
         {
             if ((Vector2)playerTransform.position == rotePoint[rotePoint.Count - 1])
             {
+                //CheckPassLevel();
                 GetDestination = true;
                 return;
             }
@@ -609,6 +653,70 @@ public class PlayerController2D : MonoBehaviour {
         }
 
     }
-    /************add by ld****************/
 
+    void CheckPassLevel()
+    {
+        LevelManager.Instance.CanPassLevel();
+    }
+     public void CalculateWithBox(bool moveRight)
+    {
+        GetDestination = false;
+        transform.GetChild(0).GetComponent<BoxCollider2D>().enabled = false;
+        rotePoint.Clear();
+        pointIndex = 0;
+
+        Vector2 playerPos = playerTransform.position;
+        Vector2 currentGetPos = MathCalulate.GetHalfVector2(playerPos);
+        targetX = moveRight ? playerPos.x + 20 : playerPos.x - 20;
+        Vector2 direction = moveRight ? Vector2.right : Vector2.left;
+
+        while (currentGetPos.x != targetX)
+        {
+            if (IfMaskVertexBlockInLand(currentGetPos + GetRayDirection())) //主角前方遇到了底片顶点
+            {
+                if (transform.GetChild(0).position.x > playerPos.x == moveRight)
+                {
+                    currentGetPos += direction * -1f;                 
+                }
+                break;
+            }
+            LandBox forwardBox = TwoRayToForward(currentGetPos);
+            if (forwardBox == LandBox.none)//前方无障碍
+            {
+                LandBox pit = TwoRayFromForwardToDown(currentGetPos);
+                if (pit == LandBox.none)//前方有坑
+                {
+                    break;
+                }                
+                else
+                {
+                    currentGetPos = currentGetPos + GetRayDirection() * 1f;
+                }
+            }
+            else//前方有障碍（墙体或者半墙）
+            {
+                if (transform.GetChild(0).position.x > playerPos.x == moveRight)
+                {
+                    currentGetPos += direction * -1f;
+                }
+                break;
+            }
+        }
+
+        if (rotePoint.Count == 0 || rotePoint[rotePoint.Count - 1] != currentGetPos)
+        {
+            rotePoint.Add(currentGetPos);//添加终点
+        }
+
+        if (mask.IfPointAtBorderX(currentGetPos + direction * 1f) && transform.GetChild(0).GetComponent<Box>().IsPush)//不能把箱子推到边框上
+        {
+            //currentGetPos += direction * -1f;
+            rotePoint.Remove(currentGetPos);
+        }
+
+        transform.GetChild(0).GetComponent<BoxCollider2D>().enabled = true;
+    }
 }
+   
+
+

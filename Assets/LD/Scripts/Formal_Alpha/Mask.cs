@@ -168,6 +168,15 @@ public class Mask : MonoBehaviour {
         return false;
     }
 
+    public bool IfPosJustOnBorderBottom(Vector2 point)
+    {
+        if (point.x <= GetMaxX() && point.x >= GetMinX() && point.y - GetMinY() == 1)
+        {
+            return true;
+        }
+        return false;
+    }
+
     void Update()
     {
 
