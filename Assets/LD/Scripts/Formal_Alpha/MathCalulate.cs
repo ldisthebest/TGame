@@ -187,7 +187,14 @@ public class MathCalulate
         return rectSoldiers;
     }
 
-
+    public static bool ifRectCanIgnore(Rectangle rect)
+    {
+        if (rect.maxX - rect.minX < 0.3f || rect.maxY - rect.minY < 0.3f)
+        {
+            return true;
+        }
+        return false;
+    }
 }
 
 

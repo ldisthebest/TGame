@@ -122,7 +122,7 @@ public class PlayerController2D : MonoBehaviour {
             if (!mask.IsInRectangle(hitPos))
             {
                 GetDestination = false;
-                CaculateRoute();
+                CaculateRote();
                 pointIndex = 0;
             }
             else
@@ -153,7 +153,7 @@ public class PlayerController2D : MonoBehaviour {
             else if(hitMask)
             {            
                 GetDestination = false;
-                CaculateRoute();
+                CaculateRote();
                 pointIndex = 0; 
             }
             hitMask = false;
@@ -202,9 +202,9 @@ public class PlayerController2D : MonoBehaviour {
 
         while(currentGetPos.x != targetX)
         {
-            if(IfMaskVertexBlockInLand(currentGetPos)) //主角遇到了底片顶点
+            if(IfMaskVertexBlockInLand(currentGetPos + GetRayDirection()) || mask.IfPosJustOnBorderTop(currentGetPos + GetRayDirection())) //主角遇到了底片顶点
             {
-                currentGetPos -= GetRayDirection();
+                //currentGetPos -= GetRayDirection();
                 break;
             }
             RaycastHit2D climbHit = RayToForward(currentGetPos);
@@ -212,7 +212,7 @@ public class PlayerController2D : MonoBehaviour {
             {
                 if(RayFromForwardToDown(currentGetPos).collider == null)//前方有坑
                 {
-                    rotePoint.Add(currentGetPos);
+                    //rotePoint.Add(currentGetPos);
                     RaycastHit2D fallHit = RayToCheckFall(currentGetPos);
                     if (fallHit.collider == null)//跳不下去
                     {
@@ -220,10 +220,11 @@ public class PlayerController2D : MonoBehaviour {
                     }
                     else//能跳下去
                     {
-                        //float colliderTopY = fallHit.collider.bounds.max.y;
+                        rotePoint.Add(currentGetPos);
+
                         currentGetPos += new Vector2(GetRayDirection().x*1, -1);//这个1是移动一个格子
                         /*************************add by ld**********************/
-                        if (mask.IfPointAtBorderY(MathCalulate.GetHalfVector2(currentGetPos)))
+                        if (mask.IfPointAtBorderY(currentGetPos) || mask.IfPosJustOnBorderTop(currentGetPos))
                         {
                             currentGetPos -= new Vector2(GetRayDirection().x * 1, -1);
                             break;
@@ -270,8 +271,20 @@ public class PlayerController2D : MonoBehaviour {
         {
             rotePoint.Add(currentGetPos);//添加终点
         }
-       
-  
+
+        //更新卡住了的点TODO,可能会导致list长度为0
+        Vector2 lastPos = rotePoint[rotePoint.Count - 1];
+        if (mask.IfPointAtBorderX(lastPos))
+        {
+            rotePoint.RemoveAt(rotePoint.Count - 1);
+            Vector2 lastSecondPos = rotePoint[rotePoint.Count - 1];
+            if(lastPos.x == lastSecondPos.x || lastPos.y == lastSecondPos.y)//非跳的情况要加回去
+            {
+                rotePoint.Add(lastPos - GetRayDirection());
+            }
+        }
+
+
     }
 
     Vector2 GetRayDirection()

@@ -15,7 +15,7 @@ public class MaskCollider : MonoBehaviour {
     Rectangle[] outsideBox;
 
     Object colliderSoldier;
-    List<GameObject> colliderSoldiers; 
+    List<GameObject> colliderSoldiers;
     void Awake()
     {
         insideBox = new Rectangle[insideLandform.Count];
@@ -61,10 +61,9 @@ public class MaskCollider : MonoBehaviour {
         for (int i = 0; i < insideBox.Length; i++)
         {
             Rectangle? ConvergenceRect = MathCalulate.ConvergenceRectangle(insideBox[i], maskRectangle);
-            if (ConvergenceRect != null)//如果相交改变碰撞体位置和大小
-            {
-                Rectangle rect = ConvergenceRect.Value;
-                SetColliderBounds(insideLandform[i], insideBox[i], rect);
+            if (ConvergenceRect != null && !MathCalulate.ifRectCanIgnore(ConvergenceRect.Value))//如果相交改变碰撞体位置和大小
+            {               
+                SetColliderBounds(insideLandform[i], insideBox[i], ConvergenceRect.Value);
             }
             else
             {
@@ -107,7 +106,11 @@ public class MaskCollider : MonoBehaviour {
 
             for(int i =0;i<soldierRects.Count;i++)
             {
-                SetSoldierCollider(soldierRects[i]);
+                if(!MathCalulate.ifRectCanIgnore(soldierRects[i]))
+                {
+                    SetSoldierCollider(soldierRects[i]);
+                }
+               
             }
         }
         else
@@ -124,28 +127,5 @@ public class MaskCollider : MonoBehaviour {
         colliderSoldiers.Add(soldier);
     }
 
-//    void Update()
-//    {
-//#if UNITY_EDITOR
-//        //for (int i = 0; i < insideBox.Length; i++)
-//        //{
-//        //    Debug.DrawLine(new Vector2(insideBox[i].minX, insideBox[i].minY), new Vector2(insideBox[i].minX, insideBox[i].maxY), Color.red);
-//        //    Debug.DrawLine(new Vector2(insideBox[i].minX, insideBox[i].maxY), new Vector2(insideBox[i].maxX, insideBox[i].maxY), Color.red);
-//        //    Debug.DrawLine(new Vector2(insideBox[i].maxX, insideBox[i].maxY), new Vector2(insideBox[i].maxX, insideBox[i].minY), Color.red);
-//        //    Debug.DrawLine(new Vector2(insideBox[i].maxX, insideBox[i].minY), new Vector2(insideBox[i].minX, insideBox[i].minY), Color.red);
-//        //}
 
-//        Rectangle maskRectangle = GetComponent<Mask>().GetMaskContour();
-//        Rectangle? rect = MathCalulate.ConvergenceRectangle(insideBox[0], maskRectangle);
-//        if(rect != null)
-//        {
-//            Debug.DrawLine(new Vector2(rect.Value.minX, rect.Value.minY), new Vector2(rect.Value.minX, rect.Value.maxY), Color.red);
-//            Debug.DrawLine(new Vector2(rect.Value.minX, rect.Value.maxY), new Vector2(rect.Value.maxX, rect.Value.maxY), Color.red);
-//            Debug.DrawLine(new Vector2(rect.Value.maxX, rect.Value.maxY), new Vector2(rect.Value.maxX, rect.Value.minY), Color.red);
-//            Debug.DrawLine(new Vector2(rect.Value.maxX, rect.Value.minY), new Vector2(rect.Value.minX, rect.Value.minY), Color.red);
-//        }
-
-
-//#endif
-//    }
 }

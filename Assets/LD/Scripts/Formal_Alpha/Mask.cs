@@ -9,9 +9,14 @@ public class Mask : MonoBehaviour {
     float halfHeight;
 
     [SerializeField]
+    float outHalfWidth, outHalfHeight;
+
+    [SerializeField]
     float attachSpeed;
 
     public Rectangle maskContour;
+
+    public Rectangle outMaskContour;
 
     Vector3 attachPos;
 
@@ -41,14 +46,20 @@ public class Mask : MonoBehaviour {
         hitted = false;
         getAttached = true;
         camer = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
-        GetMaskContour();
         maskCollider = GetComponent<MaskCollider>();
 
         hasDrag = false;
+        InitMask();
         //test
 
     }
 
+
+    void InitMask()
+    {
+        Vector2 halfPos = MathCalulate.GetHalfVector2(maskTransform.position);
+        maskTransform.position = new Vector3(halfPos.x, halfPos.y, -1);
+    }
     public float GetMinX()
     {
         return maskTransform.position.x - halfWidth;
@@ -69,12 +80,32 @@ public class Mask : MonoBehaviour {
         return maskTransform.position.y + halfHeight;
     }
 
-    public Rectangle GetMaskContour()
+    public float GetOutMinX()
     {
-        maskContour.minX = GetMinX();
-        maskContour.minY = GetMinY();
-        maskContour.maxX = GetMaxX();
-        maskContour.maxY = GetMaxY();
+        return maskTransform.position.x - outHalfWidth;
+    }
+
+    public float GetOutMaxX()
+    {
+        return maskTransform.position.x + outHalfWidth;
+    }
+
+
+    public float GetOutMinY()
+    {
+        return maskTransform.position.y - outHalfHeight;
+    }
+
+    public float GetOutMaxY()
+    {
+        return maskTransform.position.y + outHalfHeight;
+    }
+    public Rectangle GetOutMaskContour()
+    {
+        maskContour.minX = GetOutMinX();
+        maskContour.minY = GetOutMinY();
+        maskContour.maxX = GetOutMaxX();
+        maskContour.maxY = GetOutMaxY();
         return maskContour;
     }
 
@@ -82,7 +113,7 @@ public class Mask : MonoBehaviour {
     {
         float x = pos.x;
         float y = pos.y;
-        if(x >= GetMinX() && x <= GetMaxX() && y>= GetMinY() && y <= GetMaxY())
+        if(x >= GetOutMinX() && x <= GetOutMaxX() && y>= GetOutMinY() && y <= GetOutMaxY())
         {
             return true;
         }
@@ -92,10 +123,10 @@ public class Mask : MonoBehaviour {
     bool IfIntersectionWithPlayer(Vector2 pos)
     {
         Rectangle maskAboutRect;
-        maskAboutRect.minX = pos.x - halfWidth;
-        maskAboutRect.maxX = pos.x + halfWidth;
-        maskAboutRect.minY = pos.y - halfHeight;
-        maskAboutRect.maxY = pos.y + halfWidth;
+        maskAboutRect.minX = pos.x - outHalfWidth;
+        maskAboutRect.maxX = pos.x + outHalfWidth;
+        maskAboutRect.minY = pos.y - outHalfHeight;
+        maskAboutRect.maxY = pos.y + outHalfHeight;
 
         if (MathCalulate.ConvergenceRectangle(maskAboutRect, player.GetPlayerContour()) != null)
         {
@@ -124,6 +155,15 @@ public class Mask : MonoBehaviour {
             {
                 return true;
             }
+        }
+        return false;
+    }
+
+    public bool IfPosJustOnBorderTop(Vector2 point)
+    {
+        if(point.x <= GetMaxX() && point.x >= GetMinX() && point.y - GetMaxY() == 1)
+        {
+            return true;
         }
         return false;
     }
@@ -201,7 +241,7 @@ public class Mask : MonoBehaviour {
             {
                 hasDrag = false;
                 getAttached = true;
-                maskCollider.UpdateLandformCollider(GetMaskContour());
+                maskCollider.UpdateLandformCollider(GetOutMaskContour());
             }
         }
 
