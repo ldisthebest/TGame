@@ -116,6 +116,18 @@ public class Mask : MonoBehaviour {
         return false;
     }
 
+    public bool IfPointAtBorderX(Vector2 point)
+    {
+        if (point.y >= GetMinY() && point.y <= GetMaxY())
+        {
+            if (point.x == GetMinX() || point.x == GetMaxX())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     void Update()
     {
 

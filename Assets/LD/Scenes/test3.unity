@@ -373,8 +373,8 @@ MonoBehaviour:
   halfWidth: 0.35
   halfHeight: 0.49
   horizontalRayLength: 1.1
-  verticalRayLength: 1.1
-  moveSpeed: 1
+  verticalRayLength: 0.7
+  moveSpeed: 5
   maxClimbHeight: 1
   maxFallHeight: 1
   mask: {fileID: 1729625150}
@@ -557,8 +557,8 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 377760599}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -4.5, y: -0.5, z: 0}
-  m_LocalScale: {x: 0.25, y: 0.25, z: 0.294}
+  m_LocalPosition: {x: -0.4952, y: -0.5, z: 0}
+  m_LocalScale: {x: 2.252375, y: 0.25, z: 0.294}
   m_Children: []
   m_Father: {fileID: 1478768369}
   m_RootOrder: 3
@@ -586,7 +586,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 4.74, y: 2.95}
+  m_Size: {x: 4, y: 4}
   m_EdgeRadius: 0
 --- !u!212 &377760602
 SpriteRenderer:
@@ -907,8 +907,8 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1099908563}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 3.42, y: -1.69, z: 0}
-  m_LocalScale: {x: 2.7075152, y: 1.2231545, z: 1}
+  m_LocalPosition: {x: -0.992, y: -1.742, z: 0}
+  m_LocalScale: {x: 0.8501598, y: 1.1836467, z: 1}
   m_Children: []
   m_Father: {fileID: 1403931123}
   m_RootOrder: 2
@@ -1181,7 +1181,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1729625149}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 2.55, z: -1}
+  m_LocalPosition: {x: 1.114, y: 3.452, z: -1}
   m_LocalScale: {x: 1.5, y: 1.5, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

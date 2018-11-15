@@ -122,7 +122,7 @@ public class PlayerController2D : MonoBehaviour {
             if (!mask.IsInRectangle(hitPos))
             {
                 GetDestination = false;
-                CaculateRote();
+                CaculateRoute();
                 pointIndex = 0;
             }
             else
@@ -151,12 +151,12 @@ public class PlayerController2D : MonoBehaviour {
                 GetDestination = true;
             }
             else if(hitMask)
-            {
-                hitMask = false;
+            {            
                 GetDestination = false;
-                CaculateRote();
+                CaculateRoute();
                 pointIndex = 0; 
             }
+            hitMask = false;
         }
         /**************************************add by ld*****************/
 
@@ -286,7 +286,7 @@ public class PlayerController2D : MonoBehaviour {
 
     RaycastHit2D RayToForward(Vector2 currentGetPos)
     {
-        return Physics2D.Raycast(currentGetPos, GetRayDirection(), horizontalRayLength);
+        return Physics2D.Raycast(currentGetPos + GetRayDirection()*0.1f, GetRayDirection(), horizontalRayLength);
     }
 
     RaycastHit2D RayToUp(Vector2 currentGetPos)
@@ -312,7 +312,11 @@ public class PlayerController2D : MonoBehaviour {
 
     void MoveToRotePoint()
     {
-      
+        if(rotePoint.Count == 0)
+        {
+            GetDestination = true;
+            return;
+        }
        
         Vector2 currentPos = playerTransform.position;
 
@@ -447,8 +451,56 @@ public class PlayerController2D : MonoBehaviour {
         }
     }
 
+    bool CanFallInHalf(Vector2 currentGetPos)
+    {
+        RaycastHit2D noneBox1 = RayToForward(currentGetPos + GetRayDirection());
+        RaycastHit2D noneBox2 = RayToForward(currentGetPos + GetRayDirection() - Vector2.up);
+        LandBox wholeBox1 = TwoRayFromForwardToDown(currentGetPos - Vector2.up);
+        
+        RaycastHit2D wholeBox2 = RayToForward(currentGetPos - Vector2.up*2 + GetRayDirection());
+        if (noneBox1.collider == null && noneBox2.collider == null && wholeBox1 == LandBox.whole && wholeBox2.collider != null)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    bool IfCanClimb(ref Vector2 currentGetPos)//前方有整格障碍的时候判断判断能不能爬
+    {
+        rotePoint.Add(currentGetPos);
+        if (RayToUp(currentGetPos).collider == null)//头顶无障碍
+        {
+            if (mask.IfPointAtBorderY(currentGetPos + Vector2.up)) //主角的头顶接近底片
+            {
+                return false;
+            }
+            if (RayToCheckClimb(currentGetPos).collider == null)//能爬上去/*************可能会卡住************/
+            {
+
+                currentGetPos += new Vector2(GetRayDirection().x * 1, 1);
+
+                if (mask.IfPointAtBorderY(currentGetPos))
+                {
+                    currentGetPos -= new Vector2(GetRayDirection().x * 1, 1);
+                    return false;
+                }
+                rotePoint.Add(currentGetPos);
+            }
+            else//不能爬上去
+            {
+                return false;
+            }
+        }
+        else//头顶有障碍
+        {
+            return false;
+        }
+        return true;
+    }
+
     void CaculateRoute()
     {
+        Debug.Log("寻路计算");
         rotePoint.Clear();
         UpdateTargetX(ref targetX);
         SetPlayerTowards(targetX);
@@ -458,9 +510,8 @@ public class PlayerController2D : MonoBehaviour {
 
         while (currentGetPos.x != targetX)
         {
-            if (IfMaskVertexBlockInLand(currentGetPos)) //主角遇到了底片顶点
+            if (IfMaskVertexBlockInLand(currentGetPos + GetRayDirection())) //主角前方遇到了底片顶点
             {
-                currentGetPos -= GetRayDirection();
                 break;
             }
             LandBox forwardBox = TwoRayToForward(currentGetPos);
@@ -491,125 +542,44 @@ public class PlayerController2D : MonoBehaviour {
                 }
                 else//前方是个半坑
                 {
-                    break;
+                    if(((pit == LandBox.leftHalf && GetRayDirection() == Vector2.right)||
+                        (pit == LandBox.rigthHalf && GetRayDirection() == Vector2.left)) && CanFallInHalf(currentGetPos))
+                    {
+                        rotePoint.Add(currentGetPos + GetRayDirection());
+                        currentGetPos += GetRayDirection()*2 - Vector2.up;
+                        rotePoint.Add(currentGetPos);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                    
                 }
             }
             else if(forwardBox == LandBox.whole)//前方有整格障碍
             {
-                rotePoint.Add(currentGetPos);
-                if (RayToUp(currentGetPos).collider == null)//头顶无障碍
-                {
-                    if (mask.IfPointAtBorderY(currentGetPos + Vector2.up)) //主角的头顶接近底片
-                    {
-                        break;
-                    }
-                    if (RayToCheckClimb(currentGetPos).collider == null)//能爬上去/*************可能会卡住************/
-                    {
-
-                        currentGetPos += new Vector2(GetRayDirection().x * 1, 1);
-
-                        if (mask.IfPointAtBorderY(currentGetPos))
-                        {
-                            currentGetPos -= new Vector2(GetRayDirection().x * 1, 1);
-                            break;
-                        }
-                        rotePoint.Add(currentGetPos);
-                    }
-                    else//不能爬上去
-                    {
-                        break;
-                    }
-                }
-                else//头顶有障碍
+               if(!IfCanClimb(ref currentGetPos))
                 {
                     break;
                 }
             }
             else//前方有半格障碍
             {
-                if(GetRayDirection() == Vector2.right && forwardBox == LandBox.rigthHalf)
+                LandBox pit = TwoRayFromForwardToDown(currentGetPos);
+                bool condition1 = (GetRayDirection() == Vector2.right && forwardBox == LandBox.rigthHalf) && (pit != LandBox.rigthHalf && pit != LandBox.none);
+                bool condition2 = (GetRayDirection() == Vector2.left && forwardBox == LandBox.leftHalf) && (pit != LandBox.leftHalf && pit != LandBox.none);
+                if(condition1 || condition2)
                 {
-                    LandBox pit = TwoRayFromForwardToDown(currentGetPos);
-                    if (pit == LandBox.rigthHalf || pit == LandBox.none)
+                    if (!IfCanClimb(ref currentGetPos))
                     {
                         break;
-                    }
-                    else //判断能不能跳上去，和前面代码一样
-                    {
-                        rotePoint.Add(currentGetPos);
-                        if (RayToUp(currentGetPos).collider == null)//头顶无障碍
-                        {
-                            if (mask.IfPointAtBorderY(currentGetPos + Vector2.up)) //主角的头顶接近底片
-                            {
-                                break;
-                            }
-                            if (RayToCheckClimb(currentGetPos).collider == null)//能爬上去/*************可能会卡住************/
-                            {
-
-                                currentGetPos += new Vector2(GetRayDirection().x * 1, 1);
-
-                                if (mask.IfPointAtBorderY(currentGetPos))
-                                {
-                                    currentGetPos -= new Vector2(GetRayDirection().x * 1, 1);
-                                    break;
-                                }
-                                rotePoint.Add(currentGetPos);
-                            }
-                            else//不能爬上去
-                            {
-                                break;
-                            }
-                        }
-                        else//头顶有障碍
-                        {
-                            break;
-                        }
-                    }
-                }
-                else if(GetRayDirection() == Vector2.left && forwardBox == LandBox.leftHalf)
-                {
-                    LandBox pit = TwoRayFromForwardToDown(currentGetPos);
-                    if (pit == LandBox.leftHalf || pit == LandBox.none)
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        //和上面一样
-                        rotePoint.Add(currentGetPos);
-                        if (RayToUp(currentGetPos).collider == null)//头顶无障碍
-                        {
-                            if (mask.IfPointAtBorderY(currentGetPos + Vector2.up)) //主角的头顶接近底片
-                            {
-                                break;
-                            }
-                            if (RayToCheckClimb(currentGetPos).collider == null)//能爬上去/*************可能会卡住************/
-                            {
-
-                                currentGetPos += new Vector2(GetRayDirection().x * 1, 1);
-
-                                if (mask.IfPointAtBorderY(currentGetPos))
-                                {
-                                    currentGetPos -= new Vector2(GetRayDirection().x * 1, 1);
-                                    break;
-                                }
-                                rotePoint.Add(currentGetPos);
-                            }
-                            else//不能爬上去
-                            {
-                                break;
-                            }
-                        }
-                        else//头顶有障碍
-                        {
-                            break;
-                        }
                     }
                 }
                 else
                 {
-                    break;//其他情况寻路结束
+                    break;
                 }
+               
             }
         }
 
@@ -620,7 +590,10 @@ public class PlayerController2D : MonoBehaviour {
         }
 
         //更新卡住了的点TODO,可能会导致list长度为0
-       
+        if(mask.IfPointAtBorderX(rotePoint[rotePoint.Count - 1]))
+        {
+            rotePoint.RemoveAt(rotePoint.Count - 1);
+        }
 
     }
     /************add by ld****************/
