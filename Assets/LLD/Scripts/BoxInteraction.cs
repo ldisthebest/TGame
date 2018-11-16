@@ -6,27 +6,29 @@ public class BoxInteraction : MonoBehaviour {
 
     [HideInInspector]
     public Box TheBox;
+
     public GameObject Left;
     public GameObject Right;
     public GameObject Stop;
 
     private Vector3 distance;
 
+    private Transform theTrans;
+
 	// Use this for initialization
 	void Start () {
-        //box = GetComponentInParent<Box>();
 
-        //因为UI在世界坐标下，需要手动调整UI在上层，即z坐标为负
-        transform.position = new Vector3(transform.position.x, transform.position.y, -1);
+        theTrans = transform;
 
         distance = new Vector3(-4.5f, -0.5f, 1.0f);
-        gameObject.transform.position = TheBox.transform.position - distance;
+        
+        theTrans.position = TheBox.transform.position - distance;
 	}
 	
 	// Update is called once per frame
 	void Update () {
 
-        gameObject.transform.position = TheBox.transform.position - distance;
+        theTrans.position = TheBox.transform.position - distance;
 
 	}
 
