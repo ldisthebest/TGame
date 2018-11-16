@@ -89,7 +89,7 @@ public class LevelManager : MonoBehaviour {
     void SetMask()
     {
        
-        mask.position = Vector3.MoveTowards(mask.position, new Vector3(cameraPosX[currentLevel] + 6.5f, 3.5f, -1), Time.deltaTime * playerSpeed);
+        mask.position = Vector3.MoveTowards(mask.position, new Vector3(cameraPosX[currentLevel] + 6.5f, 3.5f, -1), Time.deltaTime * moveSpeed);
         if (mask.position == new Vector3(cameraPosX[currentLevel] + 6.5f, 3.5f, -1))
         {
             controller.enabled = true;
