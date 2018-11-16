@@ -18,19 +18,25 @@ public class LevelManager : MonoBehaviour {
     Transform cameras;
 
     [SerializeField]
+    Transform mask;
+
+    [SerializeField]
     int[] cameraPosX;
 
     [SerializeField]
     Vector3[] maskSize;
 
     [SerializeField]
-    Vector2[] playerbBeginPos;
+    Vector2[] playerBeginPos; 
 
     [SerializeField]
     Vector2[] passPos;
 
     [SerializeField]
     int moveSpeed;
+
+    [SerializeField]
+    int playerSpeed;
 
     [SerializeField]
     Transform player;
@@ -41,11 +47,14 @@ public class LevelManager : MonoBehaviour {
 
     bool playerMove;
 
+    bool maskMove;
+
     int currentLevel;
 
     void Awake()
     {
         cameraMove = false;
+        maskMove = false;
         currentLevel = 0;
         instance = this;
         controller = player.GetComponent<PlayerController2D>();
@@ -60,18 +69,50 @@ public class LevelManager : MonoBehaviour {
             {
                 cameraMove = false;
                 playerMove = true;
+                
+                controller.GetComponent<PlayerAction>().SetPlayerAnimation(PlayerState.Run);
+                controller.enabled = false;
             }
         }
 
         if(playerMove)
         {
+            SetPlayer();
+        }
 
+        if(maskMove)
+        {
+            SetMask();
         }
     }
 
-    void SetPlayerAndMask()
+    void SetMask()
     {
-       // player.position = Vector2.MoveTowards(player.position, playerbBeginPos[currentLevel]);
+       
+        mask.position = Vector3.MoveTowards(mask.position, new Vector3(cameraPosX[currentLevel] + 6.5f, 3.5f, -1), Time.deltaTime * playerSpeed);
+        if (mask.position == new Vector3(cameraPosX[currentLevel] + 6.5f, 3.5f, -1))
+        {
+            controller.enabled = true;
+            mask.GetComponent<Mask>().enabled = true;
+            maskMove = false;
+        }
+    }
+
+    void SetPlayer()
+    {
+        
+        player.position = Vector2.MoveTowards(player.position, playerBeginPos[currentLevel],Time.deltaTime* playerSpeed);
+        
+        if ((Vector2)player.position == playerBeginPos[currentLevel])
+        {
+            //mask.position = new Vector3(cameraPosX[currentLevel] + 6.5f, 3.5f,-1);
+            controller.GetComponent<PlayerAction>().SetPlayerAnimation(PlayerState.Idel);
+            
+            playerMove = false;
+            maskMove = true;
+            mask.position = new Vector3(cameraPosX[currentLevel] + 12.5f, 9.5f, -1);
+            mask.GetComponent<Mask>().enabled = false;
+        }
     }
     public void CanPassLevel()
     {
