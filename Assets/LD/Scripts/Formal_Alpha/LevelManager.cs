@@ -41,6 +41,8 @@ public class LevelManager : MonoBehaviour {
     [SerializeField]
     Transform player;
 
+    [SerializeField]
+    GameObject over;
     PlayerController2D controller;
 
     bool cameraMove;
@@ -130,7 +132,10 @@ public class LevelManager : MonoBehaviour {
 
     void GameOver()
     {
-
+        over.SetActive(true);
+        controller.enabled = false;
+        mask.GetComponent<Mask>().enabled = false;
+        controller.GetComponent<PlayerAction>().SetPlayerAnimation(PlayerState.Idel);
     }
 
 }

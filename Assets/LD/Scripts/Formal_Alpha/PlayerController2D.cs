@@ -395,7 +395,7 @@ public class PlayerController2D : MonoBehaviour {
         {
             if ((Vector2)playerTransform.position == rotePoint[rotePoint.Count - 1])
             {
-                //CheckPassLevel();
+                CheckPassLevel();
                 GetDestination = true;
                 return;
             }
