@@ -128,7 +128,7 @@ public class Mask : MonoBehaviour {
         maskAboutRect.minY = pos.y - outHalfHeight;
         maskAboutRect.maxY = pos.y + outHalfHeight;
 
-        if (MathCalulate.ConvergenceRectangle(maskAboutRect, player.GetPlayerContour()) != null)
+        if (MathCalulate.ConvergenceRectangle(maskAboutRect, player.PlayerContour) != null)
         {
             return true;
         }

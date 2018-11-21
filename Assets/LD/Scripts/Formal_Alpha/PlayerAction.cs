@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public enum PlayerState
 {
@@ -34,23 +32,29 @@ public class PlayerAction : MonoBehaviour {
         switch(state)
         {
             case PlayerState.Idel:
-                animator.Play("Idel");
+                PlayAnimation("Idel");
                 break;
             case PlayerState.Run:
-                animator.Play("Run");
+                PlayAnimation("Run");
                 break;
             case PlayerState.Climb:
-                animator.Play("Climb");
+                PlayAnimation("Climb");
                 break;
-
-            /************************add by lld***********************/
             case PlayerState.Push:
-                animator.Play("Push");
+                PlayAnimation("Push");
                 break;
             //暂无拉箱子动画，以推箱子动画代替
             case PlayerState.Pull:
-                animator.Play("Push");
+                PlayAnimation("Push");
                 break;
+        }
+    }
+
+    void PlayAnimation(string AnimClip)
+    {
+        if(!animator.GetCurrentAnimatorStateInfo(0).IsName(AnimClip))
+        {
+            animator.Play(AnimClip);
         }
     }
 	

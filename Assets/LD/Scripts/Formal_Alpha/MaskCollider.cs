@@ -14,15 +14,17 @@ public class MaskCollider : MonoBehaviour {
     Rectangle[] insideBox;
     Rectangle[] outsideBox;
 
-    Object colliderSoldier;
     List<GameObject> colliderSoldiers;
+
+    Object colliderSoldier; //全局变量
     void Awake()
     {
+        colliderSoldier = Resources.Load(colliderSoldierPath, typeof(GameObject));
         insideBox = new Rectangle[insideLandform.Count];
         outsideBox = new Rectangle[outsideLandform.Count];
         colliderSoldiers = new List<GameObject>();
         InitRectangle();
-        colliderSoldier = Resources.Load(colliderSoldierPath, typeof(GameObject));
+       
     }
 
     void ClearColliderSoldiers()

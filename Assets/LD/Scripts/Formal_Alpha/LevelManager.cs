@@ -55,10 +55,14 @@ public class LevelManager : MonoBehaviour {
 
     void Awake()
     {
+        if(instance == null)
+        {
+            instance = this;
+        }
         cameraMove = false;
         maskMove = false;
         currentLevel = 0;
-        instance = this;
+       
         controller = player.GetComponent<PlayerController2D>();
     }
 

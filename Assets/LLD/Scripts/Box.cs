@@ -35,7 +35,7 @@ public class Box : MonoBehaviour {
     void Start () {
         //boxUI = GetComponentInChildren<BoxInteraction>();
         boxUI.TheBox = this;
-        mask = Player.GetComponent<PlayerController2D>().mask;
+        mask = GameObject.FindWithTag("Mask").GetComponent<Mask>();
         theTransform = transform;
         destination = theTransform.position;
         theCollider = GetComponent<BoxCollider2D>();
