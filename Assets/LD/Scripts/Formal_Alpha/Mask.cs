@@ -184,18 +184,19 @@ public class Mask : MonoBehaviour {
         {
 
             firstHitPos = camer.ScreenToWorldPoint(Input.mousePosition);
+            //如果没点中底片或者主角现在没有静止就返回
             if (!IsInRectangle(firstHitPos) || playerAction.CurrentState != PlayerState.Idel)
             {
-                // dragOffoset = Vector2.zero;
                 return;
             }
-
+            //否则判定为点中了
             hitted = true;
         }
         if(hitted)
         {
             Vector2 newHitPos = camer.ScreenToWorldPoint(Input.mousePosition);
             Vector2 dragOffoset = newHitPos - firstHitPos;
+            //如果有拖动轨迹就不能让人物走
             if(dragOffoset != Vector2.zero)
             {
                 hasDrag = true;

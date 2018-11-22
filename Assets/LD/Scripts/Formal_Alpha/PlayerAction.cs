@@ -12,7 +12,10 @@ public enum PlayerState
 public class PlayerAction : MonoBehaviour {
 
     Animator animator;
+
+    [SerializeField]
     PlayerState currentState;
+
     public PlayerState CurrentState
     {
         get
@@ -52,10 +55,28 @@ public class PlayerAction : MonoBehaviour {
 
     void PlayAnimation(string AnimClip)
     {
-        if(!animator.GetCurrentAnimatorStateInfo(0).IsName(AnimClip))
+        if (!animator.GetCurrentAnimatorStateInfo(0).IsName(AnimClip))
         {
             animator.Play(AnimClip);
+            
         }
     }
 	
+    public bool CanPlayerChangeRoute()
+    {
+        if(currentState == PlayerState.Climb)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    public bool IsPlayerWithBox()
+    {
+        if(currentState == PlayerState.Push || currentState == PlayerState.Pull)
+        {
+            return true;
+        }
+        return false;
+    }
 }

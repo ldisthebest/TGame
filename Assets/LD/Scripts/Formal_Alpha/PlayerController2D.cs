@@ -30,9 +30,11 @@ public class PlayerController2D : MonoBehaviour {
 
     Mask mask;
 
-    float targetX;
+    Vector2 hitPos;
 
     bool hitMask = false;
+
+    //bool moveOver;
 
     #endregion
 
@@ -73,6 +75,8 @@ public class PlayerController2D : MonoBehaviour {
 
     #endregion
 
+    #region 初始化
+
     void Awake()
     {
         playerTransform = transform;
@@ -81,6 +85,7 @@ public class PlayerController2D : MonoBehaviour {
         GetDestination = true;
         mainCamera = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
         mask = GameObject.FindWithTag("Mask").GetComponent<Mask>();
+        //playerAction.SetPlayerAnimation(PlayerState.Idel);
         SetInitialPos();
     }
 
@@ -108,94 +113,97 @@ public class PlayerController2D : MonoBehaviour {
         playerTransform.position = new Vector2(playerTransform.position.x, y);
     }
 
-    void Update()
-    {
-        CheckMoveOrder();
-//#if UNITY_EDITOR
-//        if(rotePoint.Count > 0)
-//        {
-//            Debug.DrawLine(playerTransform.position, rotePoint[0], Color.red);
-//            for (int i = 0; i < rotePoint.Count - 1; i++)
-//            {
-//                Debug.DrawLine(rotePoint[i], rotePoint[i + 1], Color.red);
-//            }
-//        }      
-//#endif 
-    }
+    #endregion
 
-    void CheckMoveOrder()
+    void Update()
     {
         if (Input.GetMouseButtonDown(0) && !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
         {
-            //如果主角正在爬或者跳那么点击是没用的
-            if (playerAction.CurrentState == PlayerState.Climb)
+            if (!AbleToMove())
             {
                 return;
             }
-
-            //作用是，点击空白地方，结束推箱子移动效果。卡格子（待优化），结束移动。
-            if (playerAction.CurrentState == PlayerState.Push || playerAction.CurrentState == PlayerState.Pull)
-            {
-                Transform box = playerTransform.GetChild(0);
-                Vector3 gridCenter = new Vector3(MathCalulate.GetHalfValue(box.position.x), MathCalulate.GetHalfValue(box.position.y), box.position.z);
-                Vector3 playerCenter = new Vector3(MathCalulate.GetHalfValue(playerTransform.position.x), MathCalulate.GetHalfValue(playerTransform.position.y), playerTransform.position.z);
-                if (!mask.IfPointAtBorderX(gridCenter) && !mask.IfPointAtBorderX(playerCenter))
-                {
-                    box.GetComponent<Box>().boxUI.EndMove();
-                    box.position = gridCenter;
-                    playerTransform.position = playerCenter;
-                    GetDestination = true;
-                }
-                return;
-            }
-
-            Vector2 hitPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            targetX = hitPos.x;
-
-           
-
-            if (!mask.IsInRectangle(hitPos))
-            {
-                GetDestination = false;
-                CalculateRoute();
-                pointIndex = 0;
-            }
-            else
-            {
-                hitMask = true;
-            }
+            OnMouseDownEvent();
         }
 
-        if (Input.GetMouseButtonUp(0))
+        //松开鼠标并且是点了底片的情况
+        if (Input.GetMouseButtonUp(0) && hitMask)
         {
-            if (mask.hasDrag)
-            {
-                GetDestination = true;
-            }
-            else if (hitMask)
-            {
-                GetDestination = false;
-                CalculateRoute();
-                pointIndex = 0;
-            }
-            hitMask = false;
+            OnMouseUpEvent();
         }
 
+        //如果未到达终点
         if (!GetDestination)
-        {
-            MoveToRotePoint();
-        }
-        else
-        {
-            if (playerTransform.childCount != 0)
-            {
-                playerTransform.GetChild(0).gameObject.GetComponent<Box>().boxUI.EndMove();
-            }
-
-            playerAction.SetPlayerAnimation(PlayerState.Idel);
+        { 
+            MoveToRoutePoint();
         }
     }
 
+    #region 点击事件寻路逻辑
+
+    bool AbleToMove()
+    {
+        //如果主角不能改变寻路
+        if (!playerAction.CanPlayerChangeRoute())
+        {
+            return false;
+        }
+
+        //作用是，点击空白地方，结束推箱子移动效果。卡格子（待优化），结束移动。
+        if (playerAction.IsPlayerWithBox())
+        {
+            Transform box = playerTransform.GetChild(0);
+            Vector3 gridCenter = new Vector3(MathCalulate.GetHalfValue(box.position.x), MathCalulate.GetHalfValue(box.position.y), box.position.z);
+            Vector3 playerCenter = new Vector3(MathCalulate.GetHalfValue(playerTransform.position.x), MathCalulate.GetHalfValue(playerTransform.position.y), playerTransform.position.z);
+            if (!mask.IfPointAtBorderX(gridCenter) && !mask.IfPointAtBorderX(playerCenter))
+            {
+                box.GetComponent<Box>().boxUI.EndMove();
+                box.position = gridCenter;
+                playerTransform.position = playerCenter;
+                playerAction.SetPlayerAnimation(PlayerState.Idel);
+                GetDestination = true;
+            }
+            return false;
+        }
+        return true;
+    }
+
+    void OnMouseDownEvent()
+    {
+        hitPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+
+        //如果没点中底片直接寻路开始
+        if (!mask.IsInRectangle(hitPos))
+        {
+            BeginNavigation();
+        }
+        //点中了底片
+        else
+        {
+            hitMask = true;
+        }
+    }
+
+    void OnMouseUpEvent()
+    {
+        //如果没拖动底片才寻路
+        if (!mask.hasDrag)
+        {
+            BeginNavigation();
+        }
+        hitMask = false;
+    }
+
+    void BeginNavigation()
+    {
+        GetDestination = false;
+        CalculateRoute();
+        pointIndex = 0;
+    }
+
+    #endregion
+
+    #region 寻路算法
     public void SetPlayerTowards(float destinationX)
     {
         float offoset = destinationX - playerTransform.position.x;
@@ -208,6 +216,7 @@ public class PlayerController2D : MonoBehaviour {
 
     void CalculateRoute()
     {
+        float targetX = hitPos.x;
         rotePoint.Clear();
         UpdateTargetX(ref targetX);
         SetPlayerTowards(targetX);
@@ -218,7 +227,6 @@ public class PlayerController2D : MonoBehaviour {
         {
             if(IfMaskVertexBlockInLand(currentGetPos + GetRayDirection()) || mask.IfPosJustOnBorderTop(currentGetPos + GetRayDirection())) //主角遇到了底片顶点
             {
-                //currentGetPos -= GetRayDirection();
                 break;
             }
             RaycastHit2D climbHit = RayToForward(currentGetPos);
@@ -306,6 +314,9 @@ public class PlayerController2D : MonoBehaviour {
 
 
     }
+    #endregion
+
+    #region 射线相关函数
 
     Vector2 GetRayDirection()
     {
@@ -343,7 +354,10 @@ public class PlayerController2D : MonoBehaviour {
             Vector2.down, maxFallHeight); 
     }
 
-    void MoveToRotePoint()
+    #endregion
+
+    #region 移动逻辑
+    void MoveToRoutePoint()
     {
         if(rotePoint.Count == 0)
         {
@@ -351,7 +365,6 @@ public class PlayerController2D : MonoBehaviour {
             return;
         }
 
-        //-------------------------------------------- changed by lld ---------------------------------------------
         float speed = moveSpeed;
         Vector2 currentPos = playerTransform.position;
 
@@ -380,16 +393,28 @@ public class PlayerController2D : MonoBehaviour {
         }
         else
         {
+            //如果达到终点
             if ((Vector2)playerTransform.position == rotePoint[rotePoint.Count - 1])
             {
-                CheckPassLevel();
-                GetDestination = true;
+                EndMove();
                 return;
             }
             pointIndex++;
         }
     }
 
+    void EndMove()
+    {
+        if (playerTransform.childCount != 0)
+        {
+            playerTransform.GetChild(0).gameObject.GetComponent<Box>().boxUI.EndMove();
+        }
+
+        playerAction.SetPlayerAnimation(PlayerState.Idel);
+        GetDestination = true;
+        CheckPassLevel();
+    }
+    #endregion
 
     /************add by ld****************/
     void UpdateTargetX(ref float targetX)
@@ -648,6 +673,7 @@ public class PlayerController2D : MonoBehaviour {
 
     public void CalculateWithBox(bool moveRight)
     {
+        float targetX = hitPos.x;
         GetDestination = false;
         playerTransform.GetChild(0).GetComponent<BoxCollider2D>().enabled = false;
         rotePoint.Clear();
