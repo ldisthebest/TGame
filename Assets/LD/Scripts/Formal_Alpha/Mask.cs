@@ -3,8 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Mask : MonoBehaviour {
+
+    #region 序列化的私有字段
+
     [SerializeField]
     float halfWidth;
+
     [SerializeField]
     float halfHeight;
 
@@ -14,9 +18,12 @@ public class Mask : MonoBehaviour {
     [SerializeField]
     float attachSpeed;
 
-    public Rectangle maskContour;
+    [SerializeField]
+    PlayerAction playerAction;
 
-    public Rectangle outMaskContour;
+    #endregion
+
+    #region 非序列化的私有字段
 
     Vector3 attachPos;
 
@@ -26,88 +33,102 @@ public class Mask : MonoBehaviour {
 
     Camera camer;
 
-    [SerializeField]
-    PlayerAction playerAction;
     PlayerController2D player;
 
     Transform maskTransform;
 
     Vector2 firstHitPos;
 
+    Vector2 startPos;
+
     MaskCollider maskCollider;
+
+    #endregion
+
+    #region 公有字段
 
     [HideInInspector]
     public bool hasDrag;
 
+    #endregion
+
+    #region 初始化
+
     void Awake()
     {
         maskTransform = transform;
-        player = playerAction.GetComponent<PlayerController2D>();
-        hitted = false;
-        getAttached = true;
+        player = playerAction.GetComponent<PlayerController2D>();      
         camer = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
         maskCollider = GetComponent<MaskCollider>();
-
         hasDrag = false;
+        hitted = false;
+        getAttached = true;
         InitMask();
-        //test
-
     }
-
 
     void InitMask()
     {
         Vector2 halfPos = MathCalulate.GetHalfVector2(maskTransform.position);
         maskTransform.position = new Vector3(halfPos.x, halfPos.y, -1);
     }
-    public float GetMinX()
+
+    #endregion
+
+    #region 设置并获得底片属性
+
+    private float GetMinX()
     {
         return maskTransform.position.x - halfWidth;
     }
 
-    public float GetMaxX()
+    private float GetMaxX()
     {
         return maskTransform.position.x + halfWidth;
     }
 
-    public float GetMinY()
+    private float GetMinY()
     {
         return maskTransform.position.y - halfHeight;
     }
 
-    public float GetMaxY()
+    private float GetMaxY()
     {
         return maskTransform.position.y + halfHeight;
     }
 
-    public float GetOutMinX()
+    private float GetOutMinX()
     {
         return maskTransform.position.x - outHalfWidth;
     }
 
-    public float GetOutMaxX()
+    private float GetOutMaxX()
     {
         return maskTransform.position.x + outHalfWidth;
     }
 
-
-    public float GetOutMinY()
+    private float GetOutMinY()
     {
         return maskTransform.position.y - outHalfHeight;
     }
 
-    public float GetOutMaxY()
+    private float GetOutMaxY()
     {
         return maskTransform.position.y + outHalfHeight;
     }
-    public Rectangle GetOutMaskContour()
+
+    private Rectangle GetOutMaskContour()
     {
-        maskContour.minX = GetOutMinX();
-        maskContour.minY = GetOutMinY();
-        maskContour.maxX = GetOutMaxX();
-        maskContour.maxY = GetOutMaxY();
-        return maskContour;
+        Rectangle outMaskContour;
+        outMaskContour.minX = GetOutMinX();
+        outMaskContour.minY = GetOutMinY();
+        outMaskContour.maxX = GetOutMaxX();
+        outMaskContour.maxY = GetOutMaxY();
+        return outMaskContour;
     }
+
+    #endregion
+
+    #region 判断点与底片的位置关系
 
     public bool IsInRectangle(Vector2 pos)
     {
@@ -135,15 +156,19 @@ public class Mask : MonoBehaviour {
         return false;
     }
 
-    public bool IfPointAtBorderY(Vector2 point)
+    public bool IfPointAtBorderY(params Vector2[] point)
     {
-        if(point.x >= GetMinX() && point.x <= GetMaxX())
+        for(int i = 0;i<point.Length;i++)
         {
-            if(point.y == GetMinY() || point.y == GetMaxY())
+            if (point[i].x >= GetMinX() && point[i].x <= GetMaxX())
             {
-                return true;
+                if (point[i].y == GetMinY() || point[i].y == GetMaxY())
+                {
+                    return true;
+                }
             }
         }
+        
         return false;
     }
 
@@ -177,84 +202,121 @@ public class Mask : MonoBehaviour {
         return false;
     }
 
+    public bool IfVertexBlockInLand(Vector2 landPos)
+    {
+        Vector2[] vertex =
+       {
+            new Vector2(GetMinX(),GetMinY()),
+            new Vector2(GetMinX(),GetMaxY()),
+            new Vector2(GetMaxX(),GetMinY()),
+            new Vector2(GetMaxX(),GetMaxY())
+        };
+        for (int i = 0; i < vertex.Length; i++)
+        {
+            if (vertex[i] == landPos)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    #endregion
+
+    #region 拖动底片的逻辑
+
     void Update()
     {
 
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
         {
-
-            firstHitPos = camer.ScreenToWorldPoint(Input.mousePosition);
+            Vector2 hitPos = camer.ScreenToWorldPoint(Input.mousePosition);
             //如果没点中底片或者主角现在没有静止就返回
-            if (!IsInRectangle(firstHitPos) || playerAction.CurrentState != PlayerState.Idel)
+            if(IsInRectangle(hitPos))
+            {
+                firstHitPos = hitPos;
+                startPos = maskTransform.position;
+            }
+            if (!IsInRectangle(hitPos) || playerAction.CurrentState != PlayerState.Idel || IsInRectangle(player.PlayerPos))
             {
                 return;
             }
             //否则判定为点中了
             hitted = true;
+            firstHitPos = hitPos;
+            
         }
         if(hitted)
         {
-            Vector2 newHitPos = camer.ScreenToWorldPoint(Input.mousePosition);
-            Vector2 dragOffoset = newHitPos - firstHitPos;
-            //如果有拖动轨迹就不能让人物走
-            if(dragOffoset != Vector2.zero)
-            {
-                hasDrag = true;
-            }
-            Vector2 maskAboutToPos = (Vector2)maskTransform.position + dragOffoset;
-            if (IfIntersectionWithPlayer(maskAboutToPos))
-            {
-                dragOffoset = Vector2.zero;
-            }
-
-            maskTransform.Translate(dragOffoset);
-            firstHitPos = newHitPos;
-
-            if(Input.GetMouseButtonUp(0)) //松开鼠标
-            {
-                hitted = false;
-                if (hasDrag)
-                {
-                    getAttached = false;
-                    Vector2 halfPos = MathCalulate.GetHalfVector2(maskTransform.position);
-                    attachPos = new Vector3(halfPos.x, halfPos.y, -1);
-
-                    if(IfIntersectionWithPlayer(attachPos))
-                    {
-                        if(!IfIntersectionWithPlayer(attachPos + Vector3.right))
-                        {
-                            attachPos += Vector3.right;
-                        }
-                        else if(!IfIntersectionWithPlayer(attachPos - Vector3.right))
-                        {
-                            attachPos -= Vector3.right;
-                        }
-                        else if(!IfIntersectionWithPlayer(attachPos + Vector3.up))
-                        {
-                            attachPos += Vector3.up;
-                        }
-                        else if(!IfIntersectionWithPlayer(attachPos - Vector3.up))
-                        {
-                            attachPos -= Vector3.up;
-                        }
-
-                    }
-                }             
+            HittedEvent();
+            if (Input.GetMouseButtonUp(0)) //松开鼠标
+            {               
+                MouseUpEvent();
             }
         }
 
         if (!getAttached)//吸附到指定位置
         {
-            Vector3 pos = maskTransform.position;
-            maskTransform.position = Vector3.MoveTowards(pos, attachPos, Time.deltaTime * attachSpeed);
-            if (maskTransform.position == attachPos)
-            {
-                hasDrag = false;
-                getAttached = true;
-                maskCollider.UpdateLandformCollider(GetOutMaskContour());
-            }
+            AttachToPos();
+        }
+    }
+
+    void HittedEvent()
+    {
+        Vector2 dragOffoset = GetDragOffoset();
+        //如果有拖动轨迹就不能让人物走
+        if (!hasDrag && dragOffoset != Vector2.zero)
+        {
+            hasDrag = true;
+        }
+        Vector2 maskAboutToPos = (Vector2)maskTransform.position + dragOffoset;
+        if (IfIntersectionWithPlayer(maskAboutToPos))
+        {
+            dragOffoset = MathCalulate.GetOffoset(player.PlayerContour,GetOutMaskContour(),dragOffoset);
         }
 
+        maskTransform.Translate(dragOffoset);
     }
+
+    void MouseUpEvent()
+    {
+        hitted = false;
+        //当松开点击底片位置不是最开始的位置则吸附
+        if ((Vector2)maskTransform.position != startPos)
+        {
+            getAttached = false;
+            Vector2 halfPos = MathCalulate.GetHalfVector2(maskTransform.position);
+            attachPos = new Vector3(halfPos.x, halfPos.y, -1);
+        }
+    }
+
+    void AttachToPos()
+    {
+        Vector3 pos = maskTransform.position;
+        maskTransform.position = Vector3.MoveTowards(pos, attachPos, Time.deltaTime * attachSpeed);
+        //已经吸附到指定位置
+        if (maskTransform.position == attachPos)
+        {
+            getAttached = true;
+            maskCollider.UpdateLandformCollider(GetOutMaskContour());
+        }
+    }
+
+    public Vector2 GetDragOffoset()
+    {
+        Vector2 newHitPos = camer.ScreenToWorldPoint(Input.mousePosition);
+        Vector2 dragOffoset = newHitPos - firstHitPos;
+        firstHitPos = newHitPos;
+        return dragOffoset;
+    }
+    #endregion
+
+    #region 还原底片的一些标志位，外部调用
+    public void RevertDragMark()
+    {
+        hasDrag = false;
+    }
+    #endregion
+
 }
 

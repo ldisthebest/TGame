@@ -3222,6 +3222,10 @@ Prefab:
       propertyPath: m_Name
       value: box (5)
       objectReference: {fileID: 0}
+    - target: {fileID: 1669727803351296, guid: fab9cd6b0ddb85a4fb0c42d2744848ee, type: 2}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: fab9cd6b0ddb85a4fb0c42d2744848ee, type: 2}
   m_IsPrefabAsset: 0
@@ -5291,7 +5295,8 @@ MonoBehaviour:
   pushSpeed: 3
   maxClimbHeight: 1
   maxFallHeight: 1
-  shortHorizontalRayLength: 0.7
+  TheBox: {fileID: 0}
+  playerAction: {fileID: 0}
 --- !u!95 &1654499952
 Animator:
   serializedVersion: 3
@@ -6653,7 +6658,7 @@ MonoBehaviour:
   cameraPosX: 9cffffffb0ffffffc4ffffffd8ffffffecffffff0000000014000000
   maskSize: []
   playerBeginPos:
-  - {x: -100.5, y: -2.5}
+  - {x: -108.5, y: -2.5}
   - {x: -88.5, y: -0.5}
   - {x: -68.5, y: -0.5}
   - {x: -48.5, y: -1.5}
@@ -6672,6 +6677,7 @@ MonoBehaviour:
   playerSpeed: 5
   player: {fileID: 1654499954}
   over: {fileID: 766393798}
+  currentLevel: 1
 --- !u!1 &2095839223
 GameObject:
   m_ObjectHideFlags: 0

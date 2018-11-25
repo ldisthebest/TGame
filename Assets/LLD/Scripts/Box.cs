@@ -4,14 +4,32 @@ using UnityEngine;
 
 public class Box : MonoBehaviour {
 
+    #region 非序列化私有字段
+
+    private bool isMove = false;
+
     private bool isDrop = false;
 
     private bool isShow = false;
 
-    //private bool colliderEnable = true;
+    private Mask mask;
 
-    [HideInInspector]
-    public bool IsMove = false;
+    private Transform theTransform;
+
+    private BoxCollider2D theCollider;
+
+    private Vector3 destination;
+
+    #endregion
+
+    #region 序列化私有字段
+
+    [SerializeField]
+    private float dropSpeed;
+
+    #endregion
+
+    #region 公有字段
 
     [HideInInspector]
     public bool IsPush = false;
@@ -20,35 +38,70 @@ public class Box : MonoBehaviour {
 
     public BoxInteraction boxUI;
 
-    private Vector3 destination;
+    #endregion
 
-    [SerializeField]
-    private float dropSpeed;
+    #region 公有属性
 
-    private Mask mask;
+    public bool IsMove
+    {
+        get { return isMove; }
+        set
+        {
+            if(value == false)
+                transform.position= MathCalulate.GetHalfVector2(transform.position);
+            isMove = value;
+        }
+    }
 
-    private Transform theTransform;
+    #endregion
 
-    private BoxCollider2D theCollider;
+    #region Mono
 
     // Use this for initialization
     void Start () {
-        //boxUI = GetComponentInChildren<BoxInteraction>();
+
         boxUI.TheBox = this;
+
         mask = GameObject.FindWithTag("Mask").GetComponent<Mask>();
+
         theTransform = transform;
+
         destination = theTransform.position;
+
         theCollider = GetComponent<BoxCollider2D>();
+
     }
 	
 	// Update is called once per framek
 	void Update () {
 
-        //修改箱子图层
+        //修改图层
+        ChangeLayer();
+
+        if (IsMove)
+            return;
+
+        //修改碰撞体
+        ChangeColliderState();
+
+        //显示与隐藏UI
+        ShowOrHideUI();
+
+        //掉落
+        Drop();
+	}
+   
+    #endregion
+
+    #region 私有方法
+
+    void ChangeLayer()
+    {
+        //修改箱子图层,箱子正在移动的时候是bothseen
         if (IsMove)
         {
             if (LayerMask.NameToLayer("bothSeen") != gameObject.layer)
-                SetLayer("bothSeen");            
+                SetLayer("bothSeen");
             return;
         }
         else if (LayerMask.NameToLayer("bothSeen") == gameObject.layer)
@@ -58,41 +111,47 @@ public class Box : MonoBehaviour {
             else
                 SetLayer("mask");
         }
+    }
 
-        //修改碰撞体
+    void ChangeColliderState()
+    {
         if (theCollider.enabled == false && (mask.IsInRectangle(theTransform.position) == (gameObject.layer == LayerMask.NameToLayer("Default"))))
         {
             theCollider.enabled = true;
         }
-        else if(theCollider.enabled == true && (mask.IsInRectangle(theTransform.position) != (gameObject.layer == LayerMask.NameToLayer("Default"))))
+        else if (theCollider.enabled == true && (mask.IsInRectangle(theTransform.position) != (gameObject.layer == LayerMask.NameToLayer("Default"))))
         {
             theCollider.enabled = false;
             HideUI();
         }
+    }
 
-        //显示与隐藏UI
-        if (!isShow && Mathf.Abs(Player.position.x- theTransform.position.x)<1.1f && Mathf.Abs(Player.position.y- theTransform.position.y)<0.2f)
+    void ShowOrHideUI()
+    {
+        if (!isShow && Mathf.Abs(Player.position.x - theTransform.position.x) < 1.1f && Mathf.Abs(Player.position.y - theTransform.position.y) < 0.2f)
         {
-            if (mask.IsInRectangle(Player.position)==(gameObject.layer==LayerMask.NameToLayer("Default")) && theCollider.enabled == true)
+            if (mask.IsInRectangle(Player.position) == (gameObject.layer == LayerMask.NameToLayer("Default")) && theCollider.enabled == true)
                 ShowUI();
         }
-        else if(isShow &&( Mathf.Abs(Player.position.x - theTransform.position.x) >= 1.1f || Mathf.Abs(Player.position.y - theTransform.position.y) >= 0.2f))
+        else if (isShow && (Mathf.Abs(Player.position.x - theTransform.position.x) >= 1.1f || Mathf.Abs(Player.position.y - theTransform.position.y) >= 0.2f))
         {
             HideUI();
         }
+    }
 
-        //掉落
-        if(isDrop)
+    void Drop()
+    {
+        if (isDrop)
         {
-            if (Mathf.Abs(destination.y- theTransform.position.y)>0.1f)
+            if (Mathf.Abs(destination.y - theTransform.position.y) > 0.1f)
                 theTransform.Translate((destination - theTransform.position).normalized * dropSpeed * Time.deltaTime);
             else
             {
                 theTransform.position = MathCalulate.GetHalfVector2(theTransform.position);
                 isDrop = false;
             }
-        }      
-	}
+        }
+    }
 
     void ShowUI()
     {
@@ -107,34 +166,38 @@ public class Box : MonoBehaviour {
         boxUI.gameObject.SetActive(false);
     }
 
-    public void Drop()
+    void SetLayer(string str)
+    {
+        gameObject.layer = LayerMask.NameToLayer(str);
+        boxUI.SetLayer(str);       
+    }
+
+    #endregion
+
+    #region 公有方法
+
+    public void DropCheck()
     {
         //向下检测起始点应该在箱子下沿之外，当前位置向下加0.5是箱子下沿
         Vector2 origin = (Vector2)theTransform.position + Vector2.down * 0.6f;
-        RaycastHit2D ray = Physics2D.Raycast(origin,Vector2.down);
-        if(!ray)
+        RaycastHit2D ray = Physics2D.Raycast(origin, Vector2.down);
+        if (!ray)
         {
             isDrop = true;
             //无限深，箱子掉出屏幕外，需要销毁，待优化
             destination = (Vector2)theTransform.position + Vector2.down * 10f;
         }
-        else if(Mathf.Abs(ray.point.y-theTransform.position.y)>=1f)
+        else if (Mathf.Abs(ray.point.y - theTransform.position.y) >= 1f)
         {
             isDrop = true;
-            destination = MathCalulate.GetHalfVector2(ray.point+Vector2.up*0.1f);
+            destination = MathCalulate.GetHalfVector2(ray.point + Vector2.up * 0.1f);
         }
     }
 
-    void SetLayer(string str)
+    public void SetColliderActive(bool colliderState)
     {
-        gameObject.layer = LayerMask.NameToLayer(str);
-        //boxUI.transform.parent.gameObject.layer = LayerMask.NameToLayer(str);
-        boxUI.gameObject.layer = LayerMask.NameToLayer(str);
-        RectTransform[] children = boxUI.GetComponentsInChildren<RectTransform>();
-        foreach (RectTransform r in children)
-        {
-            r.gameObject.layer = LayerMask.NameToLayer(str);
-        }
+        theCollider.enabled = colliderState;
     }
-
+    
+    #endregion
 }

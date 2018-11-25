@@ -6,14 +6,13 @@ public enum PlayerState
     Run = 1,
     Climb = 2,
     Push = 3,
-    Pull = 4
+    Pull = 4,
+    Slide = 5
 }
 
 public class PlayerAction : MonoBehaviour {
 
     Animator animator;
-
-    [SerializeField]
     PlayerState currentState;
 
     public PlayerState CurrentState
@@ -48,6 +47,9 @@ public class PlayerAction : MonoBehaviour {
                 break;
             //暂无拉箱子动画，以推箱子动画代替
             case PlayerState.Pull:
+                PlayAnimation("Push");
+                break;
+            case PlayerState.Slide:
                 PlayAnimation("Push");
                 break;
         }

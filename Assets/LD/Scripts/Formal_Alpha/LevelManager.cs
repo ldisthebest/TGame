@@ -51,6 +51,7 @@ public class LevelManager : MonoBehaviour {
 
     bool maskMove;
 
+    [SerializeField]
     int currentLevel;
 
     void Awake()
@@ -61,9 +62,17 @@ public class LevelManager : MonoBehaviour {
         }
         cameraMove = false;
         maskMove = false;
-        currentLevel = 0;
        
         controller = player.GetComponent<PlayerController2D>();
+        Init();
+    }
+
+    void Init()
+    {
+        cameras.position = new Vector2(cameraPosX[currentLevel],0);
+        player.position = playerBeginPos[currentLevel];
+        if(currentLevel != 0)
+        mask.position = new Vector3(cameraPosX[currentLevel] + 6.5f, 3.5f, -1);
     }
 
     void Update()   

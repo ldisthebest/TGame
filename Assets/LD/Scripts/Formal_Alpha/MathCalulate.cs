@@ -11,85 +11,6 @@ public struct Rectangle
 
 public class MathCalulate
 {
-
-    public static void BubbleSort(float[] elem)
-    {
-        for(int times = 0; times < elem.Length - 1; times++)
-        {
-            for (int index = 0; index < elem.Length - times -1; index++)
-            {
-                if (elem[index] > elem[index + 1])
-                {
-                    float max = elem[index];
-                    elem[index] = elem[index + 1];
-                    elem[index + 1] = max;
-                }
-            }
-        }
-        
-    }
-
-    private static int HalfFind(float[] elem,int min ,int max ,float target)
-    {
-        if(min == max)
-        {
-            if (elem[min] > target/* && min != 0*/) //特殊情况
-                return min - 1;
-            else
-                return min;
-        }
-        int half = (min + max) / 2;
-        if(target <= elem[half])
-        {
-            return HalfFind(elem, min, half, target);
-        }
-        else
-        {
-            return HalfFind(elem, half+1, max, target);
-        }
-    }
-    public static int GetInsertIndexOfMin(float[] elem,float target)
-    {
-        if (elem.Length == 0)
-        {
-            return -1;
-        }
-        //折半查找的思想,返回介于两者之间较小的元素的下标
-        int result =  HalfFind(elem, 0, elem.Length-1, target);
-        //if (result+1<elem.Length && elem[result] == elem[result+1])//重合的话
-        //{
-        //    result = result + 1;    
-        //}
-        return result;
-    }
-
-
-    //private static void SortRelatedStepByY(List<FlatBoxStep> elem)
-    //{
-    //    for (int times = 0; times < elem.Count - 1; times++)
-    //    {
-    //        for (int index = 0; index < elem.Count - times - 1; index++)
-    //        {
-    //            if (elem[index].maxY > elem[index + 1].maxY)
-    //            {
-    //                FlatBoxStep max = elem[index];
-    //                elem[index] = elem[index + 1];
-    //                elem[index + 1] = max;
-    //            }
-    //        }
-    //    }
-    //}
-    //public static int GetExactlyLessIndex(List<FlatBoxStep> elem,float target)
-    //{
-    //    SortRelatedStepByY(elem);
-    //    int i = 0;
-    //    while(i < elem.Count && target >= elem[i].maxY)
-    //    {
-    //        i++;
-    //    }
-    //    return i - 1;
-    //}
-
     public static float GetHalfValue(float value)
     {
         if(value >= 0)
@@ -201,6 +122,40 @@ public class MathCalulate
         }
         return false;
     }
+
+    //获得两个矩形在某个方向上的距离向量（用于两个矩形相互靠近即将相交，默认是矩形2靠近矩形1）
+    public static Vector2 GetOffoset(Rectangle rect1, Rectangle rect2,Vector2 dir)
+    {
+        //以下是数学运算
+        float distance = (rect2.maxX + rect2.minX) / 2 - (rect1.minX + rect1.maxX) / 2;
+        float dx = distance >= 0 ? distance : -distance;
+        distance = (rect2.maxY + rect2.minY) / 2 - (rect1.minY + rect1.maxY) / 2;
+        float dy = distance >= 0 ? distance : -distance;
+        float halfWidth1 = (rect1.maxX - rect1.minX) / 2;
+        float halfHeight1 = (rect1.maxY - rect1.minY) / 2;
+        float halfWidth2 = (rect2.maxX - rect2.minX) / 2;
+        float halfHeight2 = (rect2.maxY - rect2.minY) / 2;
+
+        float judgeX = dx - halfWidth1 - halfWidth2;      
+        if (judgeX > 0 && dir.x != 0)
+        {
+            float dirX = dir.x > 0 ? dir.x : -dir.x;
+            float k = judgeX / dirX;
+            return dir * k;
+        }
+
+        float judgeY = dy - halfHeight1 - halfHeight2;
+        if (judgeY > 0 && dir.y != 0)
+        {
+            float dirY = dir.y > 0 ? dir.y : -dir.y;
+            float k = judgeY / dirY;
+            return dir * k;
+        }
+
+        return Vector2.zero;
+    }
+
+
 }
 
 
