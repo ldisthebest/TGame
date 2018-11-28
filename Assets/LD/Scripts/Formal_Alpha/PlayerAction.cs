@@ -12,8 +12,15 @@ public enum PlayerState
 
 public class PlayerAction : MonoBehaviour {
 
+    #region 私有字段
+
     Animator animator;
+
     PlayerState currentState;
+
+    #endregion
+
+    #region 公有属性
 
     public PlayerState CurrentState
     {
@@ -23,15 +30,34 @@ public class PlayerAction : MonoBehaviour {
         }
     }
 
+    #endregion
+
+    #region 初始化
+
     void Awake()
     {
         animator = GetComponent<Animator>();
         currentState = PlayerState.Idel;
     }
+
+    #endregion
+
+    #region 私有方法
+    void PlayAnimation(string AnimClip)
+    {
+        if (!animator.GetCurrentAnimatorStateInfo(0).IsName(AnimClip))
+        {
+            animator.Play(AnimClip);
+            
+        }
+    }
+    #endregion
+
+    #region 公有方法，外部调用
     public void SetPlayerAnimation(PlayerState state)
     {
         currentState = state;
-        switch(state)
+        switch (state)
         {
             case PlayerState.Idel:
                 PlayAnimation("Idel");
@@ -55,15 +81,6 @@ public class PlayerAction : MonoBehaviour {
         }
     }
 
-    void PlayAnimation(string AnimClip)
-    {
-        if (!animator.GetCurrentAnimatorStateInfo(0).IsName(AnimClip))
-        {
-            animator.Play(AnimClip);
-            
-        }
-    }
-	
     public bool CanPlayerChangeRoute()
     {
         if(currentState == PlayerState.Climb)
@@ -81,4 +98,6 @@ public class PlayerAction : MonoBehaviour {
         }
         return false;
     }
+
+    #endregion
 }

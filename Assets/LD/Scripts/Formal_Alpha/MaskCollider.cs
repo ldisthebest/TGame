@@ -1,44 +1,49 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class MaskCollider : MonoBehaviour {
 
+    #region 常量
     const string colliderSoldierPath = "Prefabs/OutsideCollider";
+    #endregion
+
+    #region 序列化的私有字段
 
     [SerializeField]
     List<BoxCollider2D> insideLandform;
+
     [SerializeField]
     List<BoxCollider2D> outsideLandform;
 
+    #endregion
+
+    #region 非序列化的私有字段
+
     Rectangle[] insideBox;
+
     Rectangle[] outsideBox;
 
     List<GameObject> colliderSoldiers;
 
-    Object colliderSoldier; //全局变量
-    void Awake()
+    Object colliderSoldier;
+
+    #endregion
+
+    #region 初始化,外部调用
+
+    public void InitWorldColliders(Rectangle maskRectangle)
     {
         colliderSoldier = Resources.Load(colliderSoldierPath, typeof(GameObject));
         insideBox = new Rectangle[insideLandform.Count];
         outsideBox = new Rectangle[outsideLandform.Count];
         colliderSoldiers = new List<GameObject>();
         InitRectangle();
-       
-    }
-
-    void ClearColliderSoldiers()
-    {
-        for(int i = 0;i<colliderSoldiers.Count;i++)
-        {
-            Destroy(colliderSoldiers[i]);
-        }
-        colliderSoldiers.Clear();
+        UpdateLandformCollider(maskRectangle);
     }
 
     void InitRectangle()
     {
-        for(int i = 0;i<insideBox.Length;i++)
+        for (int i = 0; i < insideBox.Length; i++)
         {
             Bounds colliderBounds = insideLandform[i].bounds;
             insideBox[i].minX = colliderBounds.min.x;
@@ -47,7 +52,7 @@ public class MaskCollider : MonoBehaviour {
             insideBox[i].maxY = colliderBounds.max.y;
             insideLandform[i].enabled = false;//游戏开始先禁用底片世界的碰撞体
         }
-        for(int i= 0;i<outsideBox.Length;i++)
+        for (int i = 0; i < outsideBox.Length; i++)
         {
             Bounds bounds = outsideLandform[i].bounds;
             outsideBox[i].minX = bounds.min.x;
@@ -56,6 +61,10 @@ public class MaskCollider : MonoBehaviour {
             outsideBox[i].maxY = bounds.max.y;
         }
     }
+     
+    #endregion
+
+    #region 切割碰撞体逻辑
 
     public void UpdateLandformCollider(Rectangle maskRectangle)
     {
@@ -64,8 +73,8 @@ public class MaskCollider : MonoBehaviour {
         {
             Rectangle? ConvergenceRect = MathCalulate.ConvergenceRectangle(insideBox[i], maskRectangle);
             if (ConvergenceRect != null && !MathCalulate.ifRectCanIgnore(ConvergenceRect.Value))//如果相交改变碰撞体位置和大小
-            {               
-                SetColliderBounds(insideLandform[i], insideBox[i], ConvergenceRect.Value);
+            {
+                SetInsideColliderBounds(insideLandform[i], insideBox[i], ConvergenceRect.Value);
             }
             else
             {
@@ -79,9 +88,20 @@ public class MaskCollider : MonoBehaviour {
         }
     }
 
+    //清空哨兵碰撞体和容器
+    void ClearColliderSoldiers()
+    {
+        for (int i = 0; i < colliderSoldiers.Count; i++)
+        {
+            Destroy(colliderSoldiers[i]);
+        }
+        colliderSoldiers.Clear();
+    }
 
-
-    void SetColliderBounds(BoxCollider2D collider,Rectangle colliderRect,Rectangle rect)
+    /// <param name="collider">碰撞体物体</param>
+    /// <param name="colliderRect">碰撞体对应的初始矩形信息</param>
+    /// <param name="rect">将碰撞体大小设置成的目标矩形</param>
+    void SetInsideColliderBounds(BoxCollider2D collider,Rectangle colliderRect,Rectangle rect)
     {
         collider.enabled = true;
         Vector2 landformScale = collider.transform.localScale;
@@ -128,6 +148,8 @@ public class MaskCollider : MonoBehaviour {
         soldier.transform.localScale = new Vector2(rect.maxX - rect.minX,rect.maxY-rect.minY);
         colliderSoldiers.Add(soldier);
     }
+
+    #endregion
 
 
 }
