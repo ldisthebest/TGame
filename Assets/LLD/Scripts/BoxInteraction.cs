@@ -94,16 +94,17 @@ public class BoxInteraction : MonoBehaviour {
         //float toward = TheBox.IsPush ? player.position.x - 10 : player.position.x + 10;
         //这一行是设置主角方向与运动方向一致
         float toward = player.position.x - 10;
-        playerController.SetPlayerTowards(toward);
-
-        if (TheBox.IsPush)
-            playerController.playerAction.SetPlayerAnimation(PlayerState.Push);
-        else
-            playerController.playerAction.SetPlayerAnimation(PlayerState.Pull);
+        playerController.SetPlayerTowards(toward);       
 
         boxTrans.SetParent(TheBox.Player);
         playerController.ChangeSpeed(PlayerState.Push);
-        playerController.CalculateWithBox(Direction.left);
+        if(playerController.CalculateWithBox(Direction.left))
+        {
+            if (TheBox.IsPush)
+                playerController.playerAction.SetPlayerAnimation(PlayerState.Push);
+            else
+                playerController.playerAction.SetPlayerAnimation(PlayerState.Pull);
+        }
     }
 
     public void RightMove()
@@ -121,14 +122,15 @@ public class BoxInteraction : MonoBehaviour {
         float toward = player.position.x + 10;
         playerController.SetPlayerTowards(toward);
 
-        if (TheBox.IsPush)
-            playerController.playerAction.SetPlayerAnimation(PlayerState.Push);
-        else
-            playerController.playerAction.SetPlayerAnimation(PlayerState.Pull);
-
         boxTrans.SetParent(TheBox.Player);
         playerController.ChangeSpeed(PlayerState.Push);
-        playerController.CalculateWithBox(Direction.right);
+        if (playerController.CalculateWithBox(Direction.right))
+        {
+            if (TheBox.IsPush)
+                playerController.playerAction.SetPlayerAnimation(PlayerState.Push);
+            else
+                playerController.playerAction.SetPlayerAnimation(PlayerState.Pull);
+        }
     }
 
     public void EndMove()

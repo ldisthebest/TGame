@@ -132,6 +132,8 @@ public class Box : MonoBehaviour {
         {
             if (mask.IsInRectangle(Player.position) == (gameObject.layer == LayerMask.NameToLayer("Default")) && theCollider.enabled == true)
                 ShowUI();
+            else if (mask.IfPointAtBorderX(Player.position) && theCollider.enabled == true)
+                ShowUI();
         }
         else if (isShow && (Mathf.Abs(Player.position.x - theTransform.position.x) >= 1.1f || Mathf.Abs(Player.position.y - theTransform.position.y) >= 0.2f))
         {

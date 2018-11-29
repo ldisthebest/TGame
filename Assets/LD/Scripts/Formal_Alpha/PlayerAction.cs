@@ -31,6 +31,7 @@ public class PlayerAction : MonoBehaviour {
     public void SetPlayerAnimation(PlayerState state)
     {
         currentState = state;
+        Debug.LogWarning(state);
         switch(state)
         {
             case PlayerState.Idel:
