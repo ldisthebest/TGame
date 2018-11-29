@@ -11,6 +11,7 @@ public struct Rectangle
 
 public class MathCalulate
 {
+    //得到半值
     public static float GetHalfValue(float value)
     {
         if(value >= 0)
@@ -23,6 +24,7 @@ public class MathCalulate
         }       
     }
 
+    //得到整值
     public static float GetWholeValue(float value)
     {
         if (value >= 0)
@@ -50,6 +52,7 @@ public class MathCalulate
         return value;
     }
 
+    //得到半二维向量
     public static Vector2 GetHalfVector2(Vector2 pos)
     {
         float x = GetHalfValue(pos.x);
@@ -58,12 +61,14 @@ public class MathCalulate
 
     }
 
+    //得到整二维向量（最近的）
     public static Vector2 GetNearestWholeUnit(Vector2 pos)
     {
         return new Vector2(GetWholeValue(pos.x), GetWholeValue(pos.y));
         
     }
 
+    //得到两个矩形的相交区域
     public static Rectangle? ConvergenceRectangle(Rectangle rect1, Rectangle rect2)
     {
         float minX = rect1.minX > rect2.minX ? rect1.minX : rect2.minX;
@@ -82,6 +87,7 @@ public class MathCalulate
         return null;
     }
 
+    //返回两个矩形除去相交区域的所有子矩形
     public static List<Rectangle> GetColliderSoldierArea(Rectangle rect, Rectangle convergenceRect)
     {
         List<Rectangle> rectSoldiers = new List<Rectangle>();
@@ -114,6 +120,7 @@ public class MathCalulate
         return rectSoldiers;
     }
 
+    //判断矩形是否可忽略（用于摆放场景的误差位置）
     public static bool ifRectCanIgnore(Rectangle rect)
     {
         if (rect.maxX - rect.minX < 0.3f || rect.maxY - rect.minY < 0.3f)

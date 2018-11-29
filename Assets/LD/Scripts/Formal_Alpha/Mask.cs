@@ -64,6 +64,7 @@ public class Mask : MonoBehaviour {
         hitted = false;
         getAttached = true;
         InitMask();
+        maskCollider.InitWorldColliders(GetOutMaskContour());
     }
 
     void InitMask()
@@ -230,21 +231,10 @@ public class Mask : MonoBehaviour {
 
         if (Input.GetMouseButtonDown(0) && !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
         {
-            Vector2 hitPos = camer.ScreenToWorldPoint(Input.mousePosition);
-            //如果没点中底片或者主角现在没有静止就返回
-            if(IsInRectangle(hitPos))
-            {
-                firstHitPos = hitPos;
-                startPos = maskTransform.position;
-            }
-            if (!IsInRectangle(hitPos) || playerAction.CurrentState != PlayerState.Idel || IsInRectangle(player.PlayerPos))
+            if(!OnMouseDownInMask())
             {
                 return;
             }
-            //否则判定为点中了
-            hitted = true;
-            firstHitPos = hitPos;
-            
         }
         if(hitted)
         {
@@ -259,6 +249,25 @@ public class Mask : MonoBehaviour {
         {
             AttachToPos();
         }
+    }
+
+    bool OnMouseDownInMask()
+    {
+        Vector2 hitPos = camer.ScreenToWorldPoint(Input.mousePosition);
+        //如果没点中底片或者主角现在没有静止就返回
+        if (IsInRectangle(hitPos))
+        {
+            firstHitPos = hitPos;
+            startPos = maskTransform.position;
+        }
+        if (!IsInRectangle(hitPos) || playerAction.CurrentState != PlayerState.Idel || IsInRectangle(player.PlayerPos))
+        {
+            return false;
+        }
+        //否则判定为点中了
+        hitted = true;
+        firstHitPos = hitPos;
+        return true;
     }
 
     void HittedEvent()
