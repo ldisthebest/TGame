@@ -77,6 +77,10 @@ public class PlayerController2D : MonoBehaviour {
 
     #endregion
 
+    
+
+    /*下面是函数*/
+
     #region 初始化
     void Awake()
     {
@@ -291,8 +295,8 @@ public class PlayerController2D : MonoBehaviour {
         }
 
     }
-
-    public void CalculateWithBox(Direction direct)
+    //false表示不需要向前移动，true表示需要向前移动
+    public bool CalculateWithBox(Direction direct)
     {
         float targetX = hitPos.x;
         GetDestination = false;
@@ -337,6 +341,8 @@ public class PlayerController2D : MonoBehaviour {
         }
 
         TheBox.SetColliderActive(true);
+        
+        return playerPos == routePoint[0] ? false : true;
     }
     #endregion
 
@@ -413,11 +419,10 @@ public class PlayerController2D : MonoBehaviour {
 
     void EndMove()
     {
-         if (playerTransform.childCount != 0)
-         {
-            TheBox.boxUI.EndMove();
-         }
-
+        if (playerTransform.childCount != 0)
+        {
+           TheBox.boxUI.EndMove();
+        }
         playerAction.SetPlayerAnimation(PlayerState.Idel);
         GetDestination = true;
         CheckPassLevel();
