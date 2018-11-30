@@ -440,8 +440,8 @@ MonoBehaviour:
   pushSpeed: 3
   maxClimbHeight: 1
   maxFallHeight: 1
-  mask: {fileID: 1729625150}
-  shortHorizontalRayLength: 0.7
+  TheBox: {fileID: 0}
+  playerAction: {fileID: 0}
 --- !u!95 &278238427
 Animator:
   serializedVersion: 3

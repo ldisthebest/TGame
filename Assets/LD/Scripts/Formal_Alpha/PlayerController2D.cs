@@ -79,8 +79,6 @@ public class PlayerController2D : MonoBehaviour {
 
     
 
-    /*下面是函数*/
-
     #region 初始化
     void Awake()
     {
