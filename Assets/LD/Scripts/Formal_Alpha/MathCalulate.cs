@@ -162,6 +162,34 @@ public class MathCalulate
         return Vector2.zero;
     }
 
+    public static bool AlmostEqual(Vector2 pos1,Vector2 pos2)
+    {
+        if(pos1.x == pos2.x && Mathf.Abs(pos1.y - pos2.y) < 0.5f)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public static bool AlmostEqual(float y1,float y2)
+    {
+        if(Mathf.Abs(y1 - y2) < 0.5f)
+        {
+            return true;
+        }
+        return false;
+    }
+
+
+
+    //用于绘制出矩形轮廓，用于测试，后期可删
+    public static void Drawline(Rectangle rect)
+    {
+        Debug.DrawLine(new Vector2(rect.minX, rect.minY), new Vector2(rect.maxX, rect.minY), Color.red);
+        Debug.DrawLine(new Vector2(rect.maxX, rect.minY), new Vector2(rect.maxX, rect.maxY), Color.red);
+        Debug.DrawLine(new Vector2(rect.maxX, rect.maxY), new Vector2(rect.minX, rect.maxY), Color.red);
+        Debug.DrawLine(new Vector2(rect.minX, rect.maxY), new Vector2(rect.minX, rect.minY), Color.red);
+    }
 
 }
 

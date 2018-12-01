@@ -25,6 +25,8 @@ public class PlayerController2D : MonoBehaviour {
 
     bool hitMask = false;
 
+    Vector2 rayDirection;
+
     #endregion
 
     #region 序列化的私有字段
@@ -83,6 +85,7 @@ public class PlayerController2D : MonoBehaviour {
     void Awake()
     {
         speed = moveSpeed;
+        rayDirection = Vector2.right;
         playerTransform = transform;
         playerAction = GetComponent<PlayerAction>();
         routePoint = new List<Vector2>();
@@ -90,6 +93,7 @@ public class PlayerController2D : MonoBehaviour {
         mainCamera = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
         mask = GameObject.FindWithTag("Mask").GetComponent<Mask>();
         SetInitialPos();
+        
     }
 
     private void SetPlayerContour()
@@ -101,19 +105,17 @@ public class PlayerController2D : MonoBehaviour {
     }
 
     private void SetInitialPos()
-    {
-        float x = MathCalulate.GetHalfValue(playerTransform.position.x);
-        playerTransform.position = new Vector2(x, playerTransform.position.y);
+    {   
         SetPlayerContour();
-
+        float x = MathCalulate.GetHalfValue(playerTransform.position.x);
         RaycastHit2D hit = Physics2D.Raycast(playerTransform.position,Vector2.down,20);
         if(hit.collider != null)
         {
             float colliderTopY = hit.collider.bounds.max.y;
-            playerTransform.position += Vector3.up * (colliderTopY - playerContour.minY);           
+            playerTransform.position = new Vector2(x, GetPlayerPosY(hit.collider));
         }
-        float y = MathCalulate.GetHalfValue(playerTransform.position.y);
-        playerTransform.position = new Vector2(playerTransform.position.x, y);
+        //float y = MathCalulate.GetHalfValue(playerTransform.position.y);
+        //playerTransform.position = new Vector2(playerTransform.position.x, y);
     }
 
     #endregion
@@ -142,6 +144,14 @@ public class PlayerController2D : MonoBehaviour {
         {
             MoveToRoutePoint();
         }
+
+#if UNITY_EDITOR
+
+        SetPlayerContour();
+        MathCalulate.Drawline(playerContour);
+
+#endif
+
     }
 
     bool AbleToMove()
@@ -164,6 +174,7 @@ public class PlayerController2D : MonoBehaviour {
             BeginSlide();
             return false;
         }
+
         return true;
     }
 
@@ -205,19 +216,40 @@ public class PlayerController2D : MonoBehaviour {
         CalculateRoute();       
     }
 
+
     #endregion
 
     #region 寻路算法
+
+    void AddRoutePoint(Vector2 currentPos)
+    {
+        //这种添加方式可能涉及到重复添加，所以加个判定
+        Vector2 point = new Vector2(currentPos.x, GetPlayerPosY(currentPos));
+        if(routePoint.Count > 0 && point == routePoint[routePoint.Count - 1])
+        {
+            return;
+        }
+        if(MathCalulate.AlmostEqual(point,playerTransform.position))
+        {
+            return;
+        }
+        routePoint.Add(new Vector2(currentPos.x, GetPlayerPosY(currentPos)));
+    }
+
+    void AddRoutePoint(Vector2 currentPos, Collider2D collider)
+    {
+        routePoint.Add(new Vector2(currentPos.x, GetPlayerPosY(collider)));
+    }
+
     void CalculateRoute()
     {
         float targetX = MathCalulate.GetHalfValue(hitPos.x);
         routePoint.Clear();
-        SetPlayerTowards(targetX);
         //注意改变寻路目的地的第一个currentGetPos不能添加进关键点集合
         Vector2 playerPos = playerTransform.position;
         Vector2 currentGetPos = MathCalulate.GetHalfVector2(playerPos);
 
-        Vector2 rayDirection = GetRayDirection();
+        SetRayDirection();
 
         while (currentGetPos.x != targetX)
         {
@@ -226,15 +258,16 @@ public class PlayerController2D : MonoBehaviour {
             {
                 break;
             }
-            RaycastHit2D climbHit = RayToForward(currentGetPos);
+            Collider2D forwardCollider = ClimbCollider(currentGetPos);
             //前方无障碍
-            if (RayToForward(currentGetPos).collider == null)
+            if (forwardCollider == null)
             {
                 //前方有坑
-                if (RayFromForwardToDown(currentGetPos).collider == null)
+                if (ExistPit(currentGetPos))
                 {
+                    Collider2D pitCollider = FallCollider(currentGetPos);
                     //跳不下去
-                    if (RayToCheckFall(currentGetPos).collider == null)
+                    if (pitCollider == null)
                     {
                         break;
                     }
@@ -246,10 +279,11 @@ public class PlayerController2D : MonoBehaviour {
                         {
                             break;
                         }
-                        routePoint.Add(currentGetPos);
+                        AddRoutePoint(currentGetPos);
                         //这个1是移动一个格子
                         currentGetPos += new Vector2(rayDirection.x * 1, -1);
-                        routePoint.Add(currentGetPos);
+                        AddRoutePoint(currentGetPos, pitCollider);
+   
                     }
                 }
                 //前方无坑可以直接走
@@ -262,15 +296,15 @@ public class PlayerController2D : MonoBehaviour {
             else
             {
                 //头顶无障碍并且高度合适能爬上去
-                if (RayToUp(currentGetPos).collider == null && RayToCheckClimb(currentGetPos).collider == null)
+                if (NoneUpBarrier(currentGetPos) && CanClimb(currentGetPos))
                 {                  
                     if (mask.IfPointAtBorderY(currentGetPos + Vector2.up,currentGetPos + Vector2.up + rayDirection))
                     {
                         break;
                     }
-                    routePoint.Add(currentGetPos);
+                    AddRoutePoint(currentGetPos);
                     currentGetPos += Vector2.up + rayDirection;
-                    routePoint.Add(currentGetPos);
+                    AddRoutePoint(currentGetPos, forwardCollider);
                 }
                 //无法爬上去
                 else
@@ -280,19 +314,18 @@ public class PlayerController2D : MonoBehaviour {
             }
         }
 
-        //结束寻路后判断是否添加最后一个currentGetPos
-        int count = routePoint.Count;
-        if ((count == 0 && playerPos != currentGetPos) || (count > 0 && routePoint[count - 1] != currentGetPos))
-        {
-            routePoint.Add(currentGetPos);
-        }
+        //结束寻路后可能需要添加最后一个currentGetPos
+        AddRoutePoint(currentGetPos);
+
         //开始改变主角动画行为
-        if(routePoint.Count != 0)
+        if (routePoint.Count != 0)
         {
             UpdatePlayerAnimation(0);
+            SetPlayerTowards();
         }
-
+        Debug.Log(routePoint.Count);
     }
+
     //false表示不需要向前移动，true表示需要向前移动
     public bool CalculateWithBox(Direction direct)
     {
@@ -306,24 +339,26 @@ public class PlayerController2D : MonoBehaviour {
         Vector2 currentGetPos = MathCalulate.GetHalfVector2(playerPos);
         Vector2 direction = (direct == Direction.right) ? Vector2.right : Vector2.left;
 
-        Vector2 rayDirection = GetRayDirection();
+        rayDirection = direction;
+        //SetRayDirection();
+        //Vector2 rayDirection = GetRayDirection();
 
         while (true)
         {
 
-            if (mask.IfVertexBlockInLand(currentGetPos + rayDirection)) //主角前方遇到了底片顶点
+            if (mask.IfVertexBlockInLand(currentGetPos + direction)) //主角前方遇到了底片顶点
             {
                 if (TheBox.IsPush)
                     currentGetPos += direction * -1f;
 
                 break;
             }
-            if (!RayToForward(currentGetPos))//前方无障碍
+            if (!ClimbCollider(currentGetPos))//前方无障碍
             {
-                if (!RayFromForwardToDown(currentGetPos))//前方有坑
+                if (ExistPit(currentGetPos))//前方有坑
                     break;
                 else
-                    currentGetPos = currentGetPos + rayDirection * 1f;
+                    currentGetPos = currentGetPos + direction * 1f;
             }
             else//前方有障碍（墙体或者半墙）
             {
@@ -333,14 +368,20 @@ public class PlayerController2D : MonoBehaviour {
             }
         }
 
-        if (routePoint.Count == 0 || routePoint[routePoint.Count - 1] != currentGetPos)
-        {
-            routePoint.Add(currentGetPos);//添加终点
-        }
+        AddRoutePoint(currentGetPos);
+        //if (routePoint.Count == 0 || routePoint[routePoint.Count - 1] != currentGetPos)
+        //{
+        //    //routePoint.Add(currentGetPos);//添加终点
+           
+        //}
 
         TheBox.SetColliderActive(true);
-        
-        return playerPos == routePoint[0] ? false : true;
+
+        if(routePoint.Count == 0)
+        {
+            return false;
+        }       
+        return MathCalulate.AlmostEqual(playerPos, routePoint[0]) ? false : true;
     }
     #endregion
 
@@ -383,6 +424,36 @@ public class PlayerController2D : MonoBehaviour {
         return Physics2D.Raycast(currentGetPos + GetRayDirection() * horizontalRayLength + Vector2.down * verticalRayLength,
             Vector2.down, maxFallHeight); 
     }
+
+    //新添加的
+    Collider2D ClimbCollider(Vector2 currentGetPos)
+    {
+        return Physics2D.Raycast(currentGetPos, rayDirection, horizontalRayLength).collider;      
+    }
+
+    Collider2D FallCollider(Vector2 currentGetPos)
+    {
+        return Physics2D.Raycast(currentGetPos + rayDirection * horizontalRayLength + Vector2.down * verticalRayLength,
+          Vector2.down, maxFallHeight).collider;
+    }
+
+    bool ExistPit(Vector2 currentGetPos)
+    {
+        return Physics2D.Raycast(currentGetPos + rayDirection * horizontalRayLength, Vector2.down, verticalRayLength).collider == null;
+    }
+
+    bool NoneUpBarrier(Vector2 currentGetPos)
+    {
+        return Physics2D.Raycast(currentGetPos, Vector2.up, verticalRayLength).collider == null;
+    }
+
+    bool CanClimb(Vector2 currentGetPos)
+    {
+        return Physics2D.Raycast(currentGetPos + maxClimbHeight * Vector2.up, rayDirection, horizontalRayLength).collider == null;
+    }
+
+   
+
 
     #endregion
 
@@ -430,12 +501,13 @@ public class PlayerController2D : MonoBehaviour {
     #region 主角自动滑动相关
     void BeginSlide()
     {
-        Vector2 playerCenter = MathCalulate.GetHalfVector2(playerTransform.position); 
+        Vector2 playerCenter = new Vector2(MathCalulate.GetHalfValue(playerTransform.position.x), playerTransform.position.y); 
         //避免滑到到墙里面去       
         if (playerCenter != routePoint[routePoint.Count - 1])
         {
-            float lerp = 0.5f * playerTransform.localScale.x;
-            playerCenter = MathCalulate.GetHalfVector2(new Vector2(playerTransform.position.x + lerp, playerTransform.position.y));
+            float slideX = MathCalulate.GetHalfValue(playerTransform.position.x + 0.5f * rayDirection.x);
+            //playerCenter = MathCalulate.GetHalfVector2(new Vector2(playerTransform.position.x + lerp, playerTransform.position.y));
+            playerCenter = new Vector2(slideX   , playerTransform.position.y);
         }
         playerAction.SetPlayerAnimation(PlayerState.Slide);
         routePoint.Clear();
@@ -459,7 +531,7 @@ public class PlayerController2D : MonoBehaviour {
     }
     #endregion
 
-    #region 改变主角的一些状态
+    #region 改变或者获得主角的一些属性
     public void SetPlayerTowards(float destinationX)
     {
         float offoset = destinationX - playerTransform.position.x;
@@ -468,6 +540,38 @@ public class PlayerController2D : MonoBehaviour {
         {
             playerTransform.localScale = new Vector2(-scale, playerTransform.localScale.y);
         }
+    }
+
+    void SetPlayerTowards()
+    {
+        float scale = playerTransform.localScale.x;
+        if (rayDirection.x * scale < 0)//换方向
+        {
+            playerTransform.localScale = new Vector2(-scale, playerTransform.localScale.y);
+        }
+    }
+
+    void SetRayDirection()
+    {
+        if(hitPos.x >= playerTransform.position.x)
+        {
+            rayDirection =  Vector2.right;
+        }
+        else
+        {
+            rayDirection = Vector2.left;
+        }
+    }
+
+    float GetPlayerPosY(Collider2D collider)
+    {
+        float colliderTopY = collider.bounds.max.y;
+        return playerTransform.position.y + colliderTopY - playerContour.minY;
+    }
+
+    float GetPlayerPosY(Vector2 currentPos)
+    {
+        return GetPlayerPosY(Physics2D.Raycast(currentPos,Vector2.down,verticalRayLength).collider);
     }
 
     public void ChangeSpeed(PlayerState state)
@@ -481,22 +585,38 @@ public class PlayerController2D : MonoBehaviour {
     //通过下一个关键点来判断主角的动画
     void UpdatePlayerAnimation(int nextPointIndex)
     {
-        float currentPosY = playerTransform.position.y;
+        Vector2 currentPos = playerTransform.position;
 
-        float nextPointY = routePoint[nextPointIndex].y;
+        Vector2 nextPoint = routePoint[nextPointIndex];
 
-        if (currentPosY == nextPointY)
+        if(currentPos.x == nextPoint.x)
         {
-            playerAction.SetPlayerAnimation(PlayerState.Run);
+            if(nextPoint.y > currentPos.y)
+            {
+                //上爬
+            }
+            else
+            {
+                //下爬
+            }
         }
-        else if (currentPosY > nextPointY)
+        else
         {
-            playerAction.SetPlayerAnimation(PlayerState.Climb);
-        }
-        else if (currentPosY < nextPointY)
-        {
-            playerAction.SetPlayerAnimation(PlayerState.Climb);
-        }
+            float currentPosY = currentPos.y;
+            float nextPointY = nextPoint.y;
+            if (MathCalulate.AlmostEqual(currentPosY, nextPointY))
+            {
+                playerAction.SetPlayerAnimation(PlayerState.Run);
+            }
+            else if (currentPosY > nextPointY)
+            {
+                playerAction.SetPlayerAnimation(PlayerState.Climb);
+            }
+            else if (currentPosY < nextPointY)
+            {
+                playerAction.SetPlayerAnimation(PlayerState.Climb);
+            }
+        }    
     }
     #endregion
 
