@@ -10,6 +10,24 @@ public enum PlayerState
     Slide = 5
 }
 
+public enum PlayerStuckInfo
+{
+    UnableToClimb = 0,
+    UnbaleToFall,
+    UnablePullToWall,
+    UnablePushToWall,
+    UnablePullToPit,
+    UnablePushToPit,
+    OnMaskBorderTop,
+    MoveToBorderTop,
+    FallToBorderTop,
+    OnMaskInsideY,
+    PlayerStuckedByMaskVertex,
+    PushStuckedByMaskVertex,
+    PullStuckedByMaskVertex,
+    Unknow
+}
+
 public class PlayerAction : MonoBehaviour {
 
     #region 私有字段
@@ -51,6 +69,7 @@ public class PlayerAction : MonoBehaviour {
             
         }
     }
+    
     #endregion
 
     #region 公有方法，外部调用
@@ -97,6 +116,13 @@ public class PlayerAction : MonoBehaviour {
             return true;
         }
         return false;
+    }
+
+    public void ShowPlayerStuckInfo(PlayerStuckInfo stuckInfo)
+    {
+        //播放摇头动画
+        //显示图片
+        Debug.Log(stuckInfo.ToString());
     }
 
     #endregion

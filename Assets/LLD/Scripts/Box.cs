@@ -126,16 +126,25 @@ public class Box : MonoBehaviour {
         }
     }
 
+    bool PlayerNearBox()
+    {
+        if(Vector2.Distance(Player.position,theTransform.position) < 1.2f && Player.position.y >= theTransform.position.y)
+        {
+            return true;
+        }
+        return false;
+    }
+
     void ShowOrHideUI()
     {
-        if (!isShow && Mathf.Abs(Player.position.x - theTransform.position.x) < 1.1f && Mathf.Abs(Player.position.y - theTransform.position.y) < 1)
+        if (!isShow && PlayerNearBox())
         {
             if (mask.IsInRectangle(Player.position) == (gameObject.layer == LayerMask.NameToLayer("Default")) && theCollider.enabled == true)
                 ShowUI();
             else if (mask.IfPointAtBorderX(Player.position) && theCollider.enabled == true)
                 ShowUI();
         }
-        else if (isShow && (Mathf.Abs(Player.position.x - theTransform.position.x) >= 1.1f || Mathf.Abs(Player.position.y - theTransform.position.y) >= 1))
+        else if (isShow && !PlayerNearBox())
         {
             HideUI();
         }

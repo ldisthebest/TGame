@@ -225,10 +225,12 @@ public class PlayerController2D : MonoBehaviour {
     {
         //这种添加方式可能涉及到重复添加，所以加个判定
         Vector2 point = new Vector2(currentPos.x, GetPlayerPosY(currentPos));
+        //不重复天添加
         if(routePoint.Count > 0 && point == routePoint[routePoint.Count - 1])
         {
             return;
         }
+        //不添加起点
         if(MathCalulate.AlmostEqual(point,playerTransform.position))
         {
             return;
@@ -250,12 +252,26 @@ public class PlayerController2D : MonoBehaviour {
         Vector2 currentGetPos = MathCalulate.GetHalfVector2(playerPos);
 
         SetRayDirection();
+        PlayerStuckInfo stuck = PlayerStuckInfo.Unknow;
 
         while (currentGetPos.x != targetX)
         {
             //主角遇到了底片顶点
-            if (mask.IfVertexBlockInLand(currentGetPos + rayDirection) || mask.IfPosJustOnBorderTop(currentGetPos + rayDirection)) 
+            if (mask.IfVertexBlockInLand(currentGetPos + rayDirection)) 
             {
+                stuck = PlayerStuckInfo.PlayerStuckedByMaskVertex;
+                break;
+            }
+            if(mask.IfPosJustOnBorderTop(currentGetPos))
+            {
+                stuck = PlayerStuckInfo.OnMaskBorderTop;
+                break;
+                //ShowStuckInfo(PlayerStuckInfo.OnMaskBorderTop);
+                //return;
+            }
+            if (mask.IfPosJustOnBorderTop(currentGetPos + rayDirection))
+            {
+                stuck = PlayerStuckInfo.MoveToBorderTop;
                 break;
             }
             Collider2D forwardCollider = ClimbCollider(currentGetPos);
@@ -269,14 +285,21 @@ public class PlayerController2D : MonoBehaviour {
                     //跳不下去
                     if (pitCollider == null)
                     {
+                        stuck = PlayerStuckInfo.UnbaleToFall;
                         break;
                     }
                     //能跳下去
                     else
                     {
                         Vector2 judgePoint = currentGetPos + rayDirection - Vector2.up;
-                        if (mask.IfPointAtBorderY(judgePoint, judgePoint - rayDirection) || mask.IfPosJustOnBorderTop(judgePoint))
+                        if (mask.IfPointAtBorderY(judgePoint, judgePoint - rayDirection))
                         {
+                            stuck = PlayerStuckInfo.OnMaskInsideY;
+                            break;
+                        }
+                        if(mask.IfPosJustOnBorderTop(judgePoint))
+                        {
+                            stuck = PlayerStuckInfo.FallToBorderTop;
                             break;
                         }
                         AddRoutePoint(currentGetPos);
@@ -300,6 +323,7 @@ public class PlayerController2D : MonoBehaviour {
                 {                  
                     if (mask.IfPointAtBorderY(currentGetPos + Vector2.up,currentGetPos + Vector2.up + rayDirection))
                     {
+                        stuck = PlayerStuckInfo.OnMaskInsideY;
                         break;
                     }
                     AddRoutePoint(currentGetPos);
@@ -309,19 +333,28 @@ public class PlayerController2D : MonoBehaviour {
                 //无法爬上去
                 else
                 {
+                    stuck = PlayerStuckInfo.UnableToClimb;
                     break;
                 }
             }
         }
 
         //结束寻路后可能需要添加最后一个currentGetPos
-        AddRoutePoint(currentGetPos);
+        if(stuck != PlayerStuckInfo.OnMaskBorderTop)
+        {
+            AddRoutePoint(currentGetPos);
+        }     
 
-        //开始改变主角动画行为
+        //如果能走开始改变主角动画行为
         if (routePoint.Count != 0)
         {
             UpdatePlayerAnimation(0);
             SetPlayerTowards();
+        }
+        //否则显示不能走的原因
+        else
+        {
+            ShowStuckInfo(stuck);
         }
         Debug.Log(routePoint.Count);
     }
@@ -340,8 +373,7 @@ public class PlayerController2D : MonoBehaviour {
         Vector2 direction = (direct == Direction.right) ? Vector2.right : Vector2.left;
 
         rayDirection = direction;
-        //SetRayDirection();
-        //Vector2 rayDirection = GetRayDirection();
+        PlayerStuckInfo stuck = PlayerStuckInfo.Unknow;
 
         while (true)
         {
@@ -349,40 +381,69 @@ public class PlayerController2D : MonoBehaviour {
             if (mask.IfVertexBlockInLand(currentGetPos + direction)) //主角前方遇到了底片顶点
             {
                 if (TheBox.IsPush)
+                {
                     currentGetPos += direction * -1f;
-
+                    stuck = PlayerStuckInfo.PushStuckedByMaskVertex;
+                }
+                else
+                {
+                    stuck = PlayerStuckInfo.PullStuckedByMaskVertex;
+                }
                 break;
             }
             if (!ClimbCollider(currentGetPos))//前方无障碍
             {
                 if (ExistPit(currentGetPos))//前方有坑
-                    break;
+                {
+                    if(TheBox.IsPush)
+                    {
+                        if(TooDeepToFallBox(currentGetPos))
+                        {
+                            currentGetPos -= direction;
+                            stuck = PlayerStuckInfo.UnablePushToPit;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        stuck = PlayerStuckInfo.UnablePullToPit;
+                    }
+                    break;  
+                }
                 else
+                {
                     currentGetPos = currentGetPos + direction * 1f;
+                }
+                   
             }
             else//前方有障碍（墙体或者半墙）
             {
                 if (TheBox.IsPush)
+                {
                     currentGetPos += direction * -1f;
+                    stuck = PlayerStuckInfo.UnablePushToWall;
+                }
+                else
+                {
+                    stuck = PlayerStuckInfo.UnablePullToWall;
+                }                   
                 break;
             }
         }
 
         AddRoutePoint(currentGetPos);
-        //if (routePoint.Count == 0 || routePoint[routePoint.Count - 1] != currentGetPos)
-        //{
-        //    //routePoint.Add(currentGetPos);//添加终点
-           
-        //}
 
         TheBox.SetColliderActive(true);
 
         if(routePoint.Count == 0)
         {
+            ShowStuckInfo(stuck);
             return false;
         }       
-        return MathCalulate.AlmostEqual(playerPos, routePoint[0]) ? false : true;
+
+        return true;
     }
+
     #endregion
 
     #region 射线相关函数
@@ -452,7 +513,10 @@ public class PlayerController2D : MonoBehaviour {
         return Physics2D.Raycast(currentGetPos + maxClimbHeight * Vector2.up, rayDirection, horizontalRayLength).collider == null;
     }
 
-   
+    bool TooDeepToFallBox(Vector2 currentGetPos)
+    {
+        return Physics2D.Raycast(currentGetPos + rayDirection - Vector2.up*2, Vector2.down, verticalRayLength).collider == null;
+    }
 
 
     #endregion
@@ -501,14 +565,15 @@ public class PlayerController2D : MonoBehaviour {
     #region 主角自动滑动相关
     void BeginSlide()
     {
+        float playerX = MathCalulate.GetHalfValue(playerTransform.position.x);
         Vector2 playerCenter = new Vector2(MathCalulate.GetHalfValue(playerTransform.position.x), playerTransform.position.y); 
         //避免滑到到墙里面去       
         if (playerCenter != routePoint[routePoint.Count - 1])
         {
             float slideX = MathCalulate.GetHalfValue(playerTransform.position.x + 0.5f * rayDirection.x);
-            //playerCenter = MathCalulate.GetHalfVector2(new Vector2(playerTransform.position.x + lerp, playerTransform.position.y));
-            playerCenter = new Vector2(slideX   , playerTransform.position.y);
+            playerCenter = new Vector2(slideX, playerTransform.position.y);
         }
+
         playerAction.SetPlayerAnimation(PlayerState.Slide);
         routePoint.Clear();
         pointIndex = 0;
@@ -537,6 +602,16 @@ public class PlayerController2D : MonoBehaviour {
         float offoset = destinationX - playerTransform.position.x;
         float scale = playerTransform.localScale.x;
         if (offoset * scale < 0)//换方向
+        {
+            playerTransform.localScale = new Vector2(-scale, playerTransform.localScale.y);
+        }
+    }
+
+    public void SetPlayerTowards(Direction dir)
+    {
+        float scale = playerTransform.localScale.x;
+        //换方向
+        if((scale < 0 && dir == Direction.right) || (scale > 0 && dir == Direction.left))
         {
             playerTransform.localScale = new Vector2(-scale, playerTransform.localScale.y);
         }
@@ -617,6 +692,11 @@ public class PlayerController2D : MonoBehaviour {
                 playerAction.SetPlayerAnimation(PlayerState.Climb);
             }
         }    
+    }
+
+    public void ShowStuckInfo(PlayerStuckInfo stuck)
+    {
+        playerAction.ShowPlayerStuckInfo(stuck);
     }
     #endregion
 

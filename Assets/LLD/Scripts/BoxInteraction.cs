@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 
-
 public enum Direction
 {
     left,
@@ -25,11 +24,6 @@ public class BoxInteraction : MonoBehaviour {
 
     private PlayerController2D playerController;
 
-    #endregion
-
-    #region 序列化的私有字段
-
-    [SerializeField]
     private Transform boxTrans;
 
     #endregion
@@ -81,55 +75,54 @@ public class BoxInteraction : MonoBehaviour {
     #region ClickEvent
     public void LeftMove()
     {
-        ChangeUIState(false);
-        playerController.TheBox = TheBox;
-        TheBox.IsMove = true;
-
         //判断推还是拉，并将结果存储到箱子里
         TheBox.IsPush = player.position.x < boxTrans.position.x ? false : true;
 
-        /*调整主角方向为朝向箱子，必须要在箱子设为主角子物体之前*/
-        //下面这一行是设置主角朝向箱子的方向
-        //float toward = TheBox.IsPush ? player.position.x - 10 : player.position.x + 10;
-        //这一行是设置主角方向与运动方向一致
-        float toward = player.position.x - 10;
-        playerController.SetPlayerTowards(toward);       
+        playerController.TheBox = TheBox;
+
+        if (!playerController.CalculateWithBox(Direction.left))
+        {
+            return;
+        }
+        ChangeUIState(false);
+        
+        TheBox.IsMove = true;
+
+        playerController.SetPlayerTowards(Direction.left);       
 
         boxTrans.SetParent(TheBox.Player);
         playerController.ChangeSpeed(PlayerState.Push);
-        if(playerController.CalculateWithBox(Direction.left))
-        {
-            if (TheBox.IsPush)
-                playerController.playerAction.SetPlayerAnimation(PlayerState.Push);
-            else
-                playerController.playerAction.SetPlayerAnimation(PlayerState.Pull);
-        }
+        if (TheBox.IsPush)
+            playerController.playerAction.SetPlayerAnimation(PlayerState.Push);
+        else
+            playerController.playerAction.SetPlayerAnimation(PlayerState.Pull);
     }
 
     public void RightMove()
     {
-        ChangeUIState(false);
-        playerController.TheBox = TheBox;
-        TheBox.IsMove = true;
         //判断推还是拉，并将结果存储到箱子里
         TheBox.IsPush = player.position.x < boxTrans.position.x ? true : false;
+        playerController.TheBox = TheBox;
 
-        /*调整主角方向为朝向箱子，必须要在箱子设为主角子物体之前*/
-        //下面这一行是设置主角朝向箱子的方向
-        //float toward = TheBox.IsPush ? player.position.x + 10 : player.position.x - 10;
-        //这一行是设置主角方向与运动方向一致
-        float toward = player.position.x + 10;
-        playerController.SetPlayerTowards(toward);
+        if (!playerController.CalculateWithBox(Direction.right))
+        {
+            return;
+        }
+        ChangeUIState(false);
+       
+        TheBox.IsMove = true;
+        
+
+        playerController.SetPlayerTowards(Direction.right);
 
         boxTrans.SetParent(TheBox.Player);
         playerController.ChangeSpeed(PlayerState.Push);
-        if (playerController.CalculateWithBox(Direction.right))
-        {
-            if (TheBox.IsPush)
-                playerController.playerAction.SetPlayerAnimation(PlayerState.Push);
-            else
-                playerController.playerAction.SetPlayerAnimation(PlayerState.Pull);
-        }
+
+        if (TheBox.IsPush)
+            playerController.playerAction.SetPlayerAnimation(PlayerState.Push);
+        else
+            playerController.playerAction.SetPlayerAnimation(PlayerState.Pull);
+
     }
 
     public void EndMove()

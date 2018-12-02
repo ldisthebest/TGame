@@ -4,15 +4,7 @@ using UnityEngine;
 
 public class LevelManager : MonoBehaviour {
 
-    private static LevelManager instance;
-
-    public static LevelManager Instance
-    {
-        get
-        {
-            return instance;
-        }
-    }
+    public static LevelManager Instance { get; private set; }
 
     [SerializeField]
     Transform cameras;
@@ -56,9 +48,9 @@ public class LevelManager : MonoBehaviour {
 
     void Awake()
     {
-        if(instance == null)
+        if (Instance == null)
         {
-            instance = this;
+            Instance = this;
         }
         cameraMove = false;
         maskMove = false;
