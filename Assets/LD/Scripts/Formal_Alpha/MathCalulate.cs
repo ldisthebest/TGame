@@ -180,7 +180,40 @@ public class MathCalulate
         return false;
     }
 
+    public static Vector2 UpdateMaskPosOffoset(Rectangle playerRect,Rectangle maskRect)
+    {
+        if(playerRect.minX < maskRect.minX || playerRect.maxX > maskRect.maxX)
+        {
+            return Vector2.zero;
+        }
 
+        float maxY = 0;
+        float playerMaxY = playerRect.maxY;
+        if (playerMaxY >= 0)
+        {
+            maxY = (int)playerRect.maxY + 1;
+        }
+        else
+        {
+            maxY = (int)playerRect.maxY;
+        }
+
+        float minY = 0;
+        float playerMinY = playerRect.minY;
+        minY = GetWholeValue(playerMinY) - 1;
+
+    
+        if (maskRect.minY > minY && maskRect.minY < maxY)
+        {
+            return Vector2.up;
+        }
+        else if(maskRect.maxY > minY && maskRect.maxY < maxY)
+        {
+            return Vector2.down;
+        }
+        return Vector2.zero;
+
+    }
 
     //用于绘制出矩形轮廓，用于测试，后期可删
     public static void Drawline(Rectangle rect)

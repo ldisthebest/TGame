@@ -264,15 +264,11 @@ public class PlayerController2D : MonoBehaviour {
             }
             if(mask.IfPosJustOnBorderTop(currentGetPos))
             {
-                stuck = PlayerStuckInfo.OnMaskBorderTop;
+                stuck = PlayerStuckInfo.MoveToBorderTop;
+                currentGetPos -= rayDirection;
                 break;
                 //ShowStuckInfo(PlayerStuckInfo.OnMaskBorderTop);
                 //return;
-            }
-            if (mask.IfPosJustOnBorderTop(currentGetPos + rayDirection))
-            {
-                stuck = PlayerStuckInfo.MoveToBorderTop;
-                break;
             }
             Collider2D forwardCollider = ClimbCollider(currentGetPos);
             //前方无障碍
@@ -340,10 +336,7 @@ public class PlayerController2D : MonoBehaviour {
         }
 
         //结束寻路后可能需要添加最后一个currentGetPos
-        if(stuck != PlayerStuckInfo.OnMaskBorderTop)
-        {
-            AddRoutePoint(currentGetPos);
-        }     
+        AddRoutePoint(currentGetPos);  
 
         //如果能走开始改变主角动画行为
         if (routePoint.Count != 0)
@@ -403,6 +396,10 @@ public class PlayerController2D : MonoBehaviour {
                             stuck = PlayerStuckInfo.UnablePushToPit;
                             break;
                         }
+                        //else if()
+                        //{
+
+                        //}
                     }
                     else
                     {

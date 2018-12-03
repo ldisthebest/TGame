@@ -127,6 +127,16 @@ public class Mask : MonoBehaviour {
         return outMaskContour;
     }
 
+    private Rectangle GetOutMaskContour(Vector2 aboutPos)
+    {
+        Rectangle outMaskContour;
+        outMaskContour.minX = aboutPos.x - outHalfWidth; 
+        outMaskContour.minY = aboutPos.y - outHalfHeight;
+        outMaskContour.maxX = aboutPos.x + outHalfWidth;
+        outMaskContour.maxY = aboutPos.y + outHalfHeight; ;
+        return outMaskContour;
+    }
+
     #endregion
 
     #region 判断点与底片的位置关系
@@ -294,8 +304,10 @@ public class Mask : MonoBehaviour {
         if ((Vector2)maskTransform.position != startPos)
         {
             getAttached = false;
+
             Vector2 halfPos = MathCalulate.GetHalfVector2(maskTransform.position);
             attachPos = new Vector3(halfPos.x, halfPos.y, -1);
+            attachPos += (Vector3)MathCalulate.UpdateMaskPosOffoset(player.PlayerContour, GetOutMaskContour(attachPos));
         }
     }
 
