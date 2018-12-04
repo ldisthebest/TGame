@@ -353,7 +353,7 @@ public class PlayerController2D : MonoBehaviour {
     }
 
     //false表示不需要向前移动，true表示需要向前移动
-    public bool CalculateWithBox(Direction direct)
+    public bool CalculateWithBox(Direction direct,Vector2 boxPos)
     {
         float targetX = hitPos.x;
         GetDestination = false;
@@ -370,6 +370,11 @@ public class PlayerController2D : MonoBehaviour {
 
         while (true)
         {
+            if(mask.IfPosJustOnBorderTop(boxPos))
+            {
+                stuck = PlayerStuckInfo.BoxToBorderTop;
+                break;
+            }
 
             if (mask.IfVertexBlockInLand(currentGetPos + direction)) //主角前方遇到了底片顶点
             {
@@ -386,30 +391,45 @@ public class PlayerController2D : MonoBehaviour {
             }
             if (!ClimbCollider(currentGetPos))//前方无障碍
             {
+                //判断主角否面临会推或拉到边框顶部
+                if (mask.IfPosJustOnBorderTop(currentGetPos + rayDirection))
+                {
+                    if (TheBox.IsPush)
+                    {
+                        currentGetPos -= rayDirection;
+                    }
+                    stuck = PlayerStuckInfo.BoxToBorderTop;
+                    break;
+                }
                 if (ExistPit(currentGetPos))//前方有坑
                 {
-                    if(TheBox.IsPush)
+                    if (TheBox.IsPush)
                     {
-                        if(TooDeepToFallBox(currentGetPos))
+                        if (TooDeepToFallBox(currentGetPos))
                         {
                             currentGetPos -= direction;
                             stuck = PlayerStuckInfo.UnablePushToPit;
                             break;
                         }
-                        //else if()
-                        //{
-
-                        //}
+                        //判断箱子是否会推到底片顶部
+                        else if (mask.IfPosJustOnBorderTop(currentGetPos + rayDirection,currentGetPos + rayDirection - Vector2.up, currentGetPos + rayDirection - Vector2.up * 2))
+                        {
+                            stuck = PlayerStuckInfo.BoxToBorderTop;
+                            currentGetPos -= direction;
+                            break;
+                        }
                     }
                     else
                     {
+
                         stuck = PlayerStuckInfo.UnablePullToPit;
                     }
-                    break;  
+                    break;
+                   
                 }
-                else
+                else//前方无坑
                 {
-                    currentGetPos = currentGetPos + direction * 1f;
+                    currentGetPos += rayDirection;
                 }
                    
             }

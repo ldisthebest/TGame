@@ -195,12 +195,16 @@ public class Mask : MonoBehaviour {
         return false;
     }
 
-    public bool IfPosJustOnBorderTop(Vector2 point)
+    public bool IfPosJustOnBorderTop(params Vector2[] point)
     {
-        if(point.x <= GetMaxX() && point.x >= GetMinX() && point.y - GetMaxY() == 1)
+        for(int i = 0;i<point.Length;i++)
         {
-            return true;
+            if (point[i].x <= GetMaxX() && point[i].x >= GetMinX() && point[i].y - GetMaxY() == 1)
+            {
+                return true;
+            }
         }
+       
         return false;
     }
 

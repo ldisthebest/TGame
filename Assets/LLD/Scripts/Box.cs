@@ -210,5 +210,9 @@ public class Box : MonoBehaviour {
         theCollider.enabled = colliderState;
     }
     
+    public Vector2 GetBoxPos()
+    {
+        return theTransform.position;
+    }
     #endregion
 }

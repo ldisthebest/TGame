@@ -18,6 +18,7 @@ public enum PlayerStuckInfo
     UnablePushToWall,
     UnablePullToPit,
     UnablePushToPit,
+    BoxToBorderTop,
     MoveToBorderTop,
     FallToBorderTop,
     OnMaskInsideY,

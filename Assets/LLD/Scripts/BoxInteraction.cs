@@ -80,7 +80,7 @@ public class BoxInteraction : MonoBehaviour {
 
         playerController.TheBox = TheBox;
 
-        if (!playerController.CalculateWithBox(Direction.left))
+        if (!playerController.CalculateWithBox(Direction.left,TheBox.GetBoxPos()))
         {
             return;
         }
@@ -104,7 +104,7 @@ public class BoxInteraction : MonoBehaviour {
         TheBox.IsPush = player.position.x < boxTrans.position.x ? true : false;
         playerController.TheBox = TheBox;
 
-        if (!playerController.CalculateWithBox(Direction.right))
+        if (!playerController.CalculateWithBox(Direction.right,TheBox.GetBoxPos()))
         {
             return;
         }
