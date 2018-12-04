@@ -3,6 +3,10 @@ using UnityEngine;
 
 public class PlayerController2D : MonoBehaviour {
 
+    public delegate void ControlBoxUiHandler(Vector2 playerPos);
+    public event ControlBoxUiHandler BoxUiEvent;
+
+
     #region 非序列化的私有字段
 
     float speed;
@@ -575,6 +579,7 @@ public class PlayerController2D : MonoBehaviour {
         }
         playerAction.SetPlayerAnimation(PlayerState.Idel);
         GetDestination = true;
+        BoxUiEvent(playerTransform.position);
         CheckPassLevel();
     }
     #endregion
@@ -715,6 +720,12 @@ public class PlayerController2D : MonoBehaviour {
     {
         playerAction.ShowPlayerStuckInfo(stuck);
     }
+    #endregion
+
+    #region 外部调用的一些方法
+
+   
+
     #endregion
 
     void CheckPassLevel()

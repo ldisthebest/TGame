@@ -20,6 +20,8 @@ public class Box : MonoBehaviour {
 
     private Vector3 destination;
 
+    PlayerController2D player;
+
     #endregion
 
     #region 序列化私有字段
@@ -58,11 +60,13 @@ public class Box : MonoBehaviour {
     #region Mono
 
     // Use this for initialization
-    void Start () {
+    void Awake () {
 
         boxUI.TheBox = this;
 
         mask = GameObject.FindWithTag("Mask").GetComponent<Mask>();
+
+        player = GameObject.FindWithTag("Player").GetComponent<PlayerController2D>();
 
         theTransform = transform;
 
@@ -70,6 +74,7 @@ public class Box : MonoBehaviour {
 
         theCollider = GetComponent<BoxCollider2D>();
 
+        player.BoxUiEvent += ShowOrHideUI;
     }
 	
 	// Update is called once per framek
@@ -85,7 +90,7 @@ public class Box : MonoBehaviour {
         ChangeColliderState();
 
         //显示与隐藏UI
-        ShowOrHideUI();
+        //ShowOrHideUI();
 
         //掉落
         Drop();
@@ -126,25 +131,26 @@ public class Box : MonoBehaviour {
         }
     }
 
-    bool PlayerNearBox()
+    bool IsNearPlayer(Vector2 playerPos)
     {
-        if(Vector2.Distance(Player.position,theTransform.position) < 1.2f && Player.position.y >= theTransform.position.y)
+        float distanceY = playerPos.y - theTransform.position.y;
+        if (Mathf.Abs(playerPos.x - theTransform.position.x) == 1 && distanceY >= 0 && distanceY < 1)
         {
             return true;
         }
         return false;
     }
 
-    void ShowOrHideUI()
+    void ShowOrHideUI(Vector2 playerPos)
     {
-        if (!isShow && PlayerNearBox())
+        if (!isShow && IsNearPlayer(playerPos))
         {
             if (mask.IsInRectangle(Player.position) == (gameObject.layer == LayerMask.NameToLayer("Default")) && theCollider.enabled == true)
                 ShowUI();
             else if (mask.IfPointAtBorderX(Player.position) && theCollider.enabled == true)
                 ShowUI();
         }
-        else if (isShow && !PlayerNearBox())
+        else if (isShow && !IsNearPlayer(playerPos))
         {
             HideUI();
         }
