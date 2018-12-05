@@ -2927,7 +2927,7 @@ MonoBehaviour:
   playerSpeed: 5
   player: {fileID: 1459235965}
   over: {fileID: 614063100}
-  currentLevel: 0
+  currentLevel: 6
 --- !u!4 &964320723
 Transform:
   m_ObjectHideFlags: 0

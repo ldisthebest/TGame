@@ -74,7 +74,9 @@ public class Box : MonoBehaviour {
 
         theCollider = GetComponent<BoxCollider2D>();
 
-        player.BoxUiEvent += ShowOrHideUI;
+        player.ShowUiEvent += ShowUI;
+
+        player.HideUiEvent += HideUI;
     }
 	
 	// Update is called once per framek
@@ -134,26 +136,30 @@ public class Box : MonoBehaviour {
     bool IsNearPlayer(Vector2 playerPos)
     {
         float distanceY = playerPos.y - theTransform.position.y;
-        if (Mathf.Abs(playerPos.x - theTransform.position.x) == 1 && distanceY >= 0 && distanceY < 1)
+        if (Mathf.Abs(playerPos.x - theTransform.position.x) < 1.5f && distanceY >= 0 && distanceY < 1)
         {
             return true;
         }
         return false;
     }
 
-    void ShowOrHideUI(Vector2 playerPos)
+    void ShowUI(Vector2 playerPos)
     {
         if (!isShow && IsNearPlayer(playerPos))
         {
-            if (mask.IsInRectangle(Player.position) == (gameObject.layer == LayerMask.NameToLayer("Default")) && theCollider.enabled == true)
-                ShowUI();
-            else if (mask.IfPointAtBorderX(Player.position) && theCollider.enabled == true)
-                ShowUI();
+            bool condition1 = mask.IsInRectangle(Player.position) == (gameObject.layer == LayerMask.NameToLayer("Default")) && theCollider.enabled == true;
+            bool condition2 = mask.IfPointAtBorderX(Player.position) && theCollider.enabled == true;
+            if(condition1 || condition2)
+            {
+                isShow = true;
+                //后期考虑使用对象池,进行动态分配，现阶段每个箱子一套UI
+                boxUI.gameObject.SetActive(true);
+            }
         }
-        else if (isShow && !IsNearPlayer(playerPos))
-        {
-            HideUI();
-        }
+        //else if (isShow && !IsNearPlayer(playerPos))
+        //{
+        //    HideUI();
+        //}
     }
 
     void Drop()
@@ -170,17 +176,20 @@ public class Box : MonoBehaviour {
         }
     }
 
-    void ShowUI()
-    {
-        isShow = true;
-        //后期考虑使用对象池,进行动态分配，现阶段每个箱子一套UI
-        boxUI.gameObject.SetActive(true);
-    }
+    //void ShowUI()
+    //{
+    //    isShow = true;
+    //    //后期考虑使用对象池,进行动态分配，现阶段每个箱子一套UI
+    //    boxUI.gameObject.SetActive(true);
+    //}
 
     void HideUI()
     {
-        isShow = false;
-        boxUI.gameObject.SetActive(false);
+        if(isShow)
+        {
+            isShow = false;
+            boxUI.gameObject.SetActive(false);
+        }       
     }
 
     void SetLayer(string str)

@@ -3,8 +3,11 @@ using UnityEngine;
 
 public class PlayerController2D : MonoBehaviour {
 
-    public delegate void ControlBoxUiHandler(Vector2 playerPos);
-    public event ControlBoxUiHandler BoxUiEvent;
+    public delegate void ShowBoxUiHandler(Vector2 playerPos);
+    public event ShowBoxUiHandler ShowUiEvent;
+
+    public delegate void HideBoxUiHandler();
+    public event HideBoxUiHandler HideUiEvent;
 
 
     #region 非序列化的私有字段
@@ -347,6 +350,8 @@ public class PlayerController2D : MonoBehaviour {
         {
             UpdatePlayerAnimation(0);
             SetPlayerTowards();
+            //关闭箱子的UI
+            HideUiEvent();
         }
         //否则显示不能走的原因
         else
@@ -579,7 +584,7 @@ public class PlayerController2D : MonoBehaviour {
         }
         playerAction.SetPlayerAnimation(PlayerState.Idel);
         GetDestination = true;
-        BoxUiEvent(playerTransform.position);
+        ShowUiEvent(playerTransform.position);
         CheckPassLevel();
     }
     #endregion
