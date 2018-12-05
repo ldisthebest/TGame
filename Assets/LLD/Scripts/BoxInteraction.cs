@@ -8,15 +8,15 @@ public enum Direction
 
 public class BoxInteraction : MonoBehaviour {
 
+    #region 静态变量
+    private static Vector3 distance = new Vector3(-4.5f, -0.5f, 1.0f);
+    #endregion
+
     #region 非序列化的私有字段
 
     private GameObject left;
 
     private GameObject right;
-
-    private GameObject stop;
-
-    private Vector3 distance;
 
     private Transform theTrans;
 
@@ -36,35 +36,26 @@ public class BoxInteraction : MonoBehaviour {
     #endregion
 
     #region Mono
-    // Use this for initialization
-    void Start()
+    public void Init(Box box)
     {
-        /*完成所有变量初始化*/        
-        boxTrans = TheBox.transform;
+        TheBox = box;
 
-        distance = new Vector3(-4.5f, -0.5f, 1.0f);
-
-        theTrans.position = boxTrans.position - distance;
+        boxTrans = box.transform;
 
         player = TheBox.Player;
 
         playerController = player.GetComponent<PlayerController2D>();
-    }
 
-    private void Awake()
-    {
         theTrans = transform;
-        right = theTrans.Find("Right").gameObject; 
-        left = theTrans.Find("Left").gameObject;
-        stop = theTrans.Find("Stop").gameObject;
-    }
 
-    // Update is called once per frame
-    void Update () {
+        right = transform.Find("Right").gameObject;
+
+        left = transform.Find("Left").gameObject;
+
+        transform.SetParent(GameObject.FindWithTag("WorldCanvas").transform);
 
         theTrans.position = boxTrans.position - distance;
-
-	}
+    }
 
     private void OnEnable()
     {
@@ -127,6 +118,7 @@ public class BoxInteraction : MonoBehaviour {
 
     public void EndMove()
     {
+        theTrans.position = boxTrans.position - distance;
         ChangeUIState(true);
         TheBox.IsMove = false;
         boxTrans.SetParent(null);
@@ -139,11 +131,12 @@ public class BoxInteraction : MonoBehaviour {
     {
         right.SetActive(directionButton);
         left.SetActive(directionButton);
-        stop.SetActive(!directionButton);
     }
+
+
     #endregion
 
-    #region 设置layer
+    #region 设置一些属性，外部调用
     public void SetLayer(string layerName)
     {
         gameObject.layer = LayerMask.NameToLayer(layerName);
@@ -152,5 +145,15 @@ public class BoxInteraction : MonoBehaviour {
             theTrans.GetChild(i).gameObject.layer = LayerMask.NameToLayer(layerName);
         }
     }
+
+    public void SetUI(bool active)
+    {
+        if(active)
+        {
+            theTrans.position = boxTrans.position - distance;
+        }
+        gameObject.SetActive(active);
+    }
+
     #endregion
 }

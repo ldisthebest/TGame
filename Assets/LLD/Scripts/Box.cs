@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class Box : MonoBehaviour {
 
+    #region 常量
+    const string boxUiPath = "Prefabs/BoxUI";
+    #endregion
+
     #region 非序列化私有字段
 
     private bool isMove = false;
@@ -38,6 +42,7 @@ public class Box : MonoBehaviour {
 
     public Transform Player;
 
+    [HideInInspector]
     public BoxInteraction boxUI;
 
     #endregion
@@ -62,7 +67,10 @@ public class Box : MonoBehaviour {
     // Use this for initialization
     void Awake () {
 
-        boxUI.TheBox = this;
+        //boxUI.TheBox = this;
+        GameObject boxUIObject = Resources.Load<GameObject>(boxUiPath);
+        boxUI = Instantiate(boxUIObject, Vector3.zero, Quaternion.identity).GetComponent<BoxInteraction>();
+        boxUI.Init(this);
 
         mask = GameObject.FindWithTag("Mask").GetComponent<Mask>();
 
@@ -149,14 +157,13 @@ public class Box : MonoBehaviour {
             if(condition1 || condition2)
             {
                 isShow = true;
-                //后期考虑使用对象池,进行动态分配，现阶段每个箱子一套UI
-                boxUI.gameObject.SetActive(true);
+
+                boxUI.SetUI(true);
+
+
+               
             }
         }
-        //else if (isShow && !IsNearPlayer(playerPos))
-        //{
-        //    HideUI();
-        //}
     }
 
     void Drop()
@@ -173,19 +180,12 @@ public class Box : MonoBehaviour {
         }
     }
 
-    //void ShowUI()
-    //{
-    //    isShow = true;
-    //    //后期考虑使用对象池,进行动态分配，现阶段每个箱子一套UI
-    //    boxUI.gameObject.SetActive(true);
-    //}
-
     void HideUI()
     {
         if(isShow)
         {
             isShow = false;
-            boxUI.gameObject.SetActive(false);
+            boxUI.SetUI(false);
         }       
     }
 
