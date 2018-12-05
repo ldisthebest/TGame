@@ -91,9 +91,6 @@ public class Box : MonoBehaviour {
         //修改碰撞体
         ChangeColliderState();
 
-        //显示与隐藏UI
-        //ShowOrHideUI();
-
         //掉落
         Drop();
 	}
