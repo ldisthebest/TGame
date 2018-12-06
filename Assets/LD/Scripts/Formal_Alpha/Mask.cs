@@ -4,6 +4,12 @@ using UnityEngine;
 
 public class Mask : MonoBehaviour {
 
+    #region 事件委托
+    public delegate void UpdateBoxColliderHandler(Rectangle rect);
+
+    public event UpdateBoxColliderHandler UpdateColliderEvent;
+    #endregion
+
     #region 序列化的私有字段
 
     [SerializeField]

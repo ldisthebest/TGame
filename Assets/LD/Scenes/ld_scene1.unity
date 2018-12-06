@@ -2585,7 +2585,7 @@ MonoBehaviour:
   playerSpeed: 5
   player: {fileID: 1459235965}
   over: {fileID: 614063100}
-  currentLevel: 0
+  currentLevel: 2
 --- !u!4 &964320723
 Transform:
   m_ObjectHideFlags: 0
@@ -4648,7 +4648,7 @@ GameObject:
   - component: {fileID: 1718356189}
   - component: {fileID: 1718356188}
   - component: {fileID: 1718356187}
-  m_Layer: 10
+  m_Layer: 9
   m_Name: WorldCanvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}

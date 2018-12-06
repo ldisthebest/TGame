@@ -3,12 +3,14 @@ using UnityEngine;
 
 public class PlayerController2D : MonoBehaviour {
 
+
+    #region 事件委托
     public delegate void ShowBoxUiHandler(Vector2 playerPos);
     public event ShowBoxUiHandler ShowUiEvent;
 
     public delegate void HideBoxUiHandler();
     public event HideBoxUiHandler HideUiEvent;
-
+    #endregion
 
     #region 非序列化的私有字段
 
@@ -465,7 +467,16 @@ public class PlayerController2D : MonoBehaviour {
         {
             ShowStuckInfo(stuck);
             return false;
-        }       
+        }
+        else
+        {
+            SetPlayerTowards();
+            ChangeSpeed(PlayerState.Push);
+            if (TheBox.IsPush)
+                playerAction.SetPlayerAnimation(PlayerState.Push);
+            else
+                playerAction.SetPlayerAnimation(PlayerState.Pull);
+        }
 
         return true;
     }
@@ -580,7 +591,8 @@ public class PlayerController2D : MonoBehaviour {
     {
         if (playerTransform.childCount != 0)
         {
-           TheBox.boxUI.EndMove();
+           TheBox.EndMove();
+            ChangeSpeed(PlayerState.Run);
         }
         playerAction.SetPlayerAnimation(PlayerState.Idel);
         GetDestination = true;
@@ -617,7 +629,8 @@ public class PlayerController2D : MonoBehaviour {
         else
         {
             playerAction.SetPlayerAnimation(PlayerState.Idel);           
-            TheBox.boxUI.EndMove();
+            TheBox.EndMove();
+            ChangeSpeed(PlayerState.Run);
             CheckPassLevel();
         }
     }

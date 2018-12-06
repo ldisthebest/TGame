@@ -26,6 +26,8 @@ public class Box : MonoBehaviour {
 
     PlayerController2D player;
 
+    Transform playerTransform;
+
     #endregion
 
     #region 序列化私有字段
@@ -39,8 +41,6 @@ public class Box : MonoBehaviour {
 
     [HideInInspector]
     public bool IsPush = false;
-
-    public Transform Player;
 
     [HideInInspector]
     public BoxInteraction boxUI;
@@ -67,7 +67,7 @@ public class Box : MonoBehaviour {
     // Use this for initialization
     void Awake () {
 
-        //boxUI.TheBox = this;
+        //生成对应的箱子UI
         GameObject boxUIObject = Resources.Load<GameObject>(boxUiPath);
         boxUI = Instantiate(boxUIObject, Vector3.zero, Quaternion.identity).GetComponent<BoxInteraction>();
         boxUI.Init(this);
@@ -75,6 +75,8 @@ public class Box : MonoBehaviour {
         mask = GameObject.FindWithTag("Mask").GetComponent<Mask>();
 
         player = GameObject.FindWithTag("Player").GetComponent<PlayerController2D>();
+
+        playerTransform = player.transform;
 
         theTransform = transform;
 
@@ -85,47 +87,55 @@ public class Box : MonoBehaviour {
         player.ShowUiEvent += ShowUI;
 
         player.HideUiEvent += HideUI;
+
+        mask.UpdateColliderEvent += ChangeColliderState;
     }
 	
 	// Update is called once per framek
 	void Update () {
 
         //修改图层
-        ChangeLayer();
+        //ChangeLayer();
 
         if (IsMove)
             return;
 
         //修改碰撞体
-        ChangeColliderState();
+        //ChangeColliderState();
 
         //掉落
         Drop();
 	}
-   
+
+    void OnDestroy()
+    {
+        //if(boxUI.gameObject != null)
+        //{
+        //    Destroy(boxUI.gameObject);
+        //}
+    }
+
     #endregion
 
     #region 私有方法
 
-    void ChangeLayer()
-    {
-        //修改箱子图层,箱子正在移动的时候是bothseen
-        if (IsMove)
-        {
-            if (LayerMask.NameToLayer("bothSeen") != gameObject.layer)
-                SetLayer("bothSeen");
-            return;
-        }
-        else if (LayerMask.NameToLayer("bothSeen") == gameObject.layer)
-        {
-            if (mask.IsInRectangle(theTransform.position))
-                SetLayer("Default");
-            else
-                SetLayer("mask");
-        }
-    }
+    //void UpdateLayer()
+    //{
+    //    //修改箱子图层,箱子正在移动的时候是bothseen
+    //    if (IsMove)
+    //    {
+    //        SetLayer("bothSeen");
+    //    }
+    //    else if (LayerMask.NameToLayer("bothSeen") == gameObject.layer)
+    //    {
+    //        if (mask.IsInRectangle(theTransform.position))
+    //            SetLayer("Default");
+    //        else
+    //            SetLayer("mask");
+    //    }
+    //}
 
-    void ChangeColliderState()
+    void ChangeColliderState(Rectangle maskRect)
     {
         if (theCollider.enabled == false && (mask.IsInRectangle(theTransform.position) == (gameObject.layer == LayerMask.NameToLayer("Default"))))
         {
@@ -150,20 +160,27 @@ public class Box : MonoBehaviour {
 
     void ShowUI(Vector2 playerPos)
     {
-        if (!isShow && IsNearPlayer(playerPos))
+        if (!isShow && IsNearPlayer(playerPos) && theCollider.enabled)
         {
-            bool condition1 = mask.IsInRectangle(Player.position) == (gameObject.layer == LayerMask.NameToLayer("Default")) && theCollider.enabled == true;
-            bool condition2 = mask.IfPointAtBorderX(Player.position) && theCollider.enabled == true;
-            if(condition1 || condition2)
-            {
-                isShow = true;
+            //bool condition1 = mask.IsInRectangle(playerPos) == (gameObject.layer == LayerMask.NameToLayer("Default")) && theCollider.enabled == true;
+            //bool condition2 = mask.IfPointAtBorderX(theTransform.position) && theCollider.enabled == true;
+            //if(condition1 || condition2)
+            //{
+                
 
-                boxUI.SetUI(true);
-
-
-               
-            }
+            //}
+            isShow = true;
+            boxUI.SetUI(true);
         }
+    } 
+
+    void HideUI()
+    {
+        if(isShow)
+        {
+            isShow = false;
+            boxUI.SetUI(false);
+        }       
     }
 
     void Drop()
@@ -180,26 +197,16 @@ public class Box : MonoBehaviour {
         }
     }
 
-    void HideUI()
-    {
-        if(isShow)
-        {
-            isShow = false;
-            boxUI.SetUI(false);
-        }       
-    }
-
     void SetLayer(string str)
     {
         gameObject.layer = LayerMask.NameToLayer(str);
-        boxUI.SetLayer(str);       
     }
 
     #endregion
 
     #region 公有方法
 
-    public void DropCheck()
+    void DropCheck()
     {
         //向下检测起始点应该在箱子下沿之外，当前位置向下加0.5是箱子下沿
         Vector2 origin = (Vector2)theTransform.position + Vector2.down * 0.6f;
@@ -221,10 +228,62 @@ public class Box : MonoBehaviour {
     {
         theCollider.enabled = colliderState;
     }
-    
-    public Vector2 GetBoxPos()
+   
+
+    public bool CanBoxLeftMove()
     {
-        return theTransform.position;
+        IsPush = playerTransform.position.x < theTransform.position.x ? false : true;
+
+        player.TheBox = this;
+
+        if (!player.CalculateWithBox(Direction.left, theTransform.position))
+        {
+            return false;
+        }
+
+        SetLayer("bothSeen");
+
+        IsMove = true;
+
+        theTransform.SetParent(playerTransform);
+
+        return true;
+    }
+
+    public bool CanBoxRightMove()
+    {
+        IsPush = playerTransform.position.x < theTransform.position.x ? true : false;
+
+        player.TheBox = this;
+
+        if (!player.CalculateWithBox(Direction.right, theTransform.position))
+        {
+            return false;
+        }
+
+        SetLayer("bothSeen");
+
+        IsMove = true;
+
+        theTransform.SetParent(playerTransform);
+
+        return true;
+    }
+
+    public void EndMove()
+    {
+        boxUI.SetUI(true);
+        IsMove = false;
+        theTransform.SetParent(null);
+        if (mask.IsInRectangle(theTransform.position))
+        {
+            SetLayer("Default");
+        }
+        else
+        {
+            SetLayer("mask");
+        }
+        DropCheck();
     }
     #endregion
 }
