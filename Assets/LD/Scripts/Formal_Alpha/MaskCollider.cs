@@ -38,6 +38,11 @@ public class MaskCollider : MonoBehaviour {
         outsideBox = new Rectangle[outsideLandform.Count];
         colliderSoldiers = new List<GameObject>();
         InitRectangle();
+        //首先隐藏底片世界的碰撞体
+        for (int i = 0; i < insideBox.Length; i++)
+        {
+            insideLandform[i].enabled = false;
+        }
         UpdateLandformCollider(maskRectangle);
     }
 
@@ -72,13 +77,9 @@ public class MaskCollider : MonoBehaviour {
         for (int i = 0; i < insideBox.Length; i++)
         {
             Rectangle? ConvergenceRect = MathCalulate.ConvergenceRectangle(insideBox[i], maskRectangle);
-            if (ConvergenceRect != null && !MathCalulate.ifRectCanIgnore(ConvergenceRect.Value))//如果相交改变碰撞体位置和大小
+            if (ConvergenceRect != null && !MathCalulate.ifRectCanIgnore(ConvergenceRect.Value))//如果相交生成哨兵碰撞体
             {
-                SetInsideColliderBounds(insideLandform[i], insideBox[i], ConvergenceRect.Value);
-            }
-            else
-            {
-                insideLandform[i].enabled = false; //否则隐藏底片世界的碰撞体
+                SetInsideCollider(insideLandform[i], insideBox[i], ConvergenceRect.Value);
             }
         }
 
@@ -101,20 +102,9 @@ public class MaskCollider : MonoBehaviour {
     /// <param name="collider">碰撞体物体</param>
     /// <param name="colliderRect">碰撞体对应的初始矩形信息</param>
     /// <param name="rect">将碰撞体大小设置成的目标矩形</param>
-    void SetInsideColliderBounds(BoxCollider2D collider,Rectangle colliderRect,Rectangle rect)
+    void SetInsideCollider(BoxCollider2D collider,Rectangle colliderRect,Rectangle rect)
     {
-        collider.enabled = true;
-        Vector2 landformScale = collider.transform.localScale;
-        //化简得到
-        float offosetX = (rect.minX + rect.maxX - colliderRect.minX - colliderRect.maxX) / landformScale.x / 2;
-        float offosetY = (rect.minY + rect.maxY - colliderRect.minY - colliderRect.maxY) / landformScale.y / 2;
-        collider.offset = new Vector2(offosetX, offosetY);
-
-        float sizeX = collider.size.x;
-        sizeX *= (rect.maxX - rect.minX) / 2 / collider.bounds.extents.x;
-        float sizeY = collider.size.y;
-        sizeY *= (rect.maxY - rect.minY) / 2 / collider.bounds.extents.y;
-        collider.size = new Vector2(sizeX, sizeY);
+        SetSoldierCollider(rect);
     }
 
     void SetOutsideColliderPos(BoxCollider2D landformCollider,Rectangle colliderRect, Rectangle maskRectangle)

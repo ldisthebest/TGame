@@ -215,6 +215,17 @@ public class MathCalulate
 
     }
 
+    public static bool PosInRect(Vector2 pos,Rectangle rect)
+    {
+        float x = pos.x;
+        float y = pos.y;
+        if (x >= rect.minX && x <= rect.maxX && y >= rect.minY && y <= rect.maxY)
+        {
+            return true;
+        }
+        return false;
+    }
+
     //用于绘制出矩形轮廓，用于测试，后期可删
     public static void Drawline(Rectangle rect)
     {

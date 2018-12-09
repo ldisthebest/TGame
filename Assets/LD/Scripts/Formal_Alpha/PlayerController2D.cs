@@ -41,7 +41,7 @@ public class PlayerController2D : MonoBehaviour {
     #region 序列化的私有字段
 
     [SerializeField]
-    float halfWidth, halfHeight;
+    float rightBorder, leftBorder ,topBorder, bottomBorder;
 
     [SerializeField, Range(0, 2)]
     float horizontalRayLength, verticalRayLength;
@@ -78,11 +78,12 @@ public class PlayerController2D : MonoBehaviour {
         }
     }
 
-    public Vector2 PlayerPos
+    public Vector2 PlayerCenter
     {
         get
         {
-            return playerTransform.position;
+            Rectangle playerRect = PlayerContour;
+            return new Vector2((playerRect.minX+playerRect.maxX)/2,(playerRect.minY + playerRect.maxY)/2);
         }
     }
 
@@ -107,10 +108,10 @@ public class PlayerController2D : MonoBehaviour {
 
     private void SetPlayerContour()
     {
-        playerContour.minX = playerTransform.position.x - halfWidth;
-        playerContour.maxX = playerTransform.position.x + halfWidth;
-        playerContour.minY = playerTransform.position.y - halfHeight;
-        playerContour.maxY = playerTransform.position.y + halfHeight;
+        playerContour.minX = playerTransform.position.x + leftBorder;
+        playerContour.maxX = playerTransform.position.x + rightBorder;
+        playerContour.minY = playerTransform.position.y + bottomBorder;
+        playerContour.maxY = playerTransform.position.y + topBorder;
     }
 
     private void SetInitialPos()
@@ -123,8 +124,6 @@ public class PlayerController2D : MonoBehaviour {
             float colliderTopY = hit.collider.bounds.max.y;
             playerTransform.position = new Vector2(x, GetPlayerPosY(hit.collider));
         }
-        //float y = MathCalulate.GetHalfValue(playerTransform.position.y);
-        //playerTransform.position = new Vector2(playerTransform.position.x, y);
     }
 
     #endregion
@@ -168,7 +167,6 @@ public class PlayerController2D : MonoBehaviour {
         //若是在滑动，则所有操作无效，优先级最高
         if (playerAction.CurrentState == PlayerState.Slide)
         {
-            SlideToTargrt();
             return false;
         }
         //如果主角不能改变寻路
@@ -257,8 +255,7 @@ public class PlayerController2D : MonoBehaviour {
         float targetX = MathCalulate.GetHalfValue(hitPos.x);
         routePoint.Clear();
         //注意改变寻路目的地的第一个currentGetPos不能添加进关键点集合
-        Vector2 playerPos = playerTransform.position;
-        Vector2 currentGetPos = MathCalulate.GetHalfVector2(playerPos);
+        Vector2 currentGetPos = MathCalulate.GetHalfVector2(PlayerCenter);
 
         SetRayDirection();
         PlayerStuckInfo stuck = PlayerStuckInfo.Unknow;
@@ -372,8 +369,7 @@ public class PlayerController2D : MonoBehaviour {
         routePoint.Clear();
         pointIndex = 0;
 
-        Vector2 playerPos = playerTransform.position;
-        Vector2 currentGetPos = MathCalulate.GetHalfVector2(playerPos);
+        Vector2 currentGetPos = MathCalulate.GetHalfVector2(PlayerCenter);
         Vector2 direction = (direct == Direction.right) ? Vector2.right : Vector2.left;
 
         rayDirection = direction;
@@ -589,14 +585,14 @@ public class PlayerController2D : MonoBehaviour {
 
     void EndMove()
     {
-        if (playerTransform.childCount != 0)
+        if (playerAction.IsPlayerWithBox())
         {
            TheBox.EndMove();
-            ChangeSpeed(PlayerState.Run);
+           ChangeSpeed(PlayerState.Run);
         }
         playerAction.SetPlayerAnimation(PlayerState.Idel);
         GetDestination = true;
-        ShowUiEvent(playerTransform.position);
+        ShowUiEvent(PlayerCenter);
         CheckPassLevel();
     }
     #endregion
@@ -619,21 +615,6 @@ public class PlayerController2D : MonoBehaviour {
         routePoint.Add(playerCenter);
     }
 
-    void SlideToTargrt()
-    {
-        Vector2 currentPos = playerTransform.position;
-        if (currentPos != routePoint[0])
-        {
-            playerTransform.position = Vector2.MoveTowards(currentPos, routePoint[0], Time.deltaTime * pushSpeed);
-        }
-        else
-        {
-            playerAction.SetPlayerAnimation(PlayerState.Idel);           
-            TheBox.EndMove();
-            ChangeSpeed(PlayerState.Run);
-            CheckPassLevel();
-        }
-    }
     #endregion
 
     #region 改变或者获得主角的一些属性
@@ -686,7 +667,7 @@ public class PlayerController2D : MonoBehaviour {
 
     float GetPlayerPosY(Vector2 currentPos)
     {
-        return GetPlayerPosY(Physics2D.Raycast(currentPos,Vector2.down,verticalRayLength).collider);
+        return GetPlayerPosY(Physics2D.Raycast(currentPos, Vector2.down,verticalRayLength).collider);
     }
 
     public void ChangeSpeed(PlayerState state)
@@ -738,12 +719,6 @@ public class PlayerController2D : MonoBehaviour {
     {
         playerAction.ShowPlayerStuckInfo(stuck);
     }
-    #endregion
-
-    #region 外部调用的一些方法
-
-   
-
     #endregion
 
     void CheckPassLevel()
