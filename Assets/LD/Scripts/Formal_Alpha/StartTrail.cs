@@ -6,25 +6,34 @@ public class StartTrail : MonoBehaviour {
 
     Transform[] childStar;
     SpriteRenderer[] trailRender;
- 
+    SpriteRenderer[] star;
+    bool[] fadeUp;
+    bool[] starFadeUp;
+
     [SerializeField]
-    int[] rotateSpeed;
+    float[] rotateSpeed;
 
     [SerializeField]
     float[] trailFadeSpeed;
 
-    bool[] fadeUp;
+    [SerializeField]
+    float[] starFadeSpeed;
 
     private void Awake()
     {
         childStar = new Transform[3];
         trailRender = new SpriteRenderer[3];
+        star = new SpriteRenderer[3];
         fadeUp = new bool[3];
+        starFadeUp = new bool[3];
+
         for (int i =0;i<3;i++)
         {
             childStar[i] = transform.GetChild(i);
             trailRender[i] = childStar[i].GetChild(0).GetComponent<SpriteRenderer>();
+            star[i] = childStar[i].GetChild(0).GetChild(0).GetComponent<SpriteRenderer>();
             fadeUp[i] = false;
+            starFadeUp[i] = false;
         }      
 
 
@@ -34,6 +43,7 @@ public class StartTrail : MonoBehaviour {
         {
             childStar[i].Rotate(0, 0, Time.deltaTime * rotateSpeed[i]);
             UpdateFade(trailRender[i], trailFadeSpeed[i],ref fadeUp[i]);
+            UpdateFade(star[i], starFadeSpeed[i], ref starFadeUp[i]);
         }
 	}
 

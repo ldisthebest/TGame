@@ -11,6 +11,16 @@ public struct Rectangle
 
 public class MathCalulate
 {
+    public static Rectangle ScreenRect;
+
+    public static void UpdateScreeenRect(Camera camer)
+    {
+        ScreenRect.minX = camer.ScreenToWorldPoint(Vector2.zero).x;
+        ScreenRect.maxX = camer.ScreenToWorldPoint(Vector2.right * Screen.width).x;
+        ScreenRect.minY = camer.ScreenToWorldPoint(Vector2.zero).y;
+        ScreenRect.maxY = camer.ScreenToWorldPoint(Vector2.up * Screen.height).y;
+    }
+
     //得到半值
     public static float GetHalfValue(float value)
     {
@@ -225,6 +235,19 @@ public class MathCalulate
         }
         return false;
     }
+
+    public static Rectangle InitRect(Vector2 center,float halfWidth,float halfHeight)
+    {
+        Rectangle rect;
+        rect.minX = center.x - halfWidth;
+        rect.maxX = center.x + halfWidth;
+        rect.minY = center.y - halfHeight;
+        rect.maxY = center.y + halfHeight;
+        return rect;
+    }
+
+
+
 
     //用于绘制出矩形轮廓，用于测试，后期可删
     public static void Drawline(Rectangle rect)

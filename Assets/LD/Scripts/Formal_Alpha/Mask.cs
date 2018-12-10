@@ -69,7 +69,7 @@ public class Mask : MonoBehaviour {
         hasDrag = false;
         hitted = false;
         getAttached = true;
-        InitMask();
+        InitMask(); 
         maskCollider.InitWorldColliders(GetOutMaskContour());
     }
 
@@ -319,6 +319,8 @@ public class Mask : MonoBehaviour {
             Vector2 halfPos = MathCalulate.GetHalfVector2(maskTransform.position);
             attachPos = new Vector3(halfPos.x, halfPos.y, -1);
             attachPos += (Vector3)MathCalulate.UpdateMaskPosOffoset(player.PlayerContour, GetOutMaskContour(attachPos));
+
+            CheckOutOfScreenBorder();
         }
     }
 
@@ -342,6 +344,19 @@ public class Mask : MonoBehaviour {
         firstHitPos = newHitPos;
         return dragOffoset;
     }
+
+    public void CheckOutOfScreenBorder()
+    {
+        Rectangle maskRect = MathCalulate.InitRect(attachPos,outHalfWidth,outHalfHeight);
+        Rectangle screenRect = MathCalulate.ScreenRect;
+
+        if (maskRect.minX >= screenRect.maxX || maskRect.maxX <= screenRect.minX || maskRect.minY >= screenRect.maxY || maskRect.maxY <= screenRect.minY)
+        {
+            attachPos = new Vector3(screenRect.maxX, screenRect.maxY,-1);
+            maskTransform.position = (Vector2)attachPos + new Vector2(halfWidth, halfHeight);
+        }
+    }
+
     #endregion
 
     #region 还原底片的一些标志位，外部调用
