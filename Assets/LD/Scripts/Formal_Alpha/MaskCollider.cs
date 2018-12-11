@@ -19,9 +19,9 @@ public class MaskCollider : MonoBehaviour {
 
     #region 非序列化的私有字段
 
-    Rectangle[] insideBox;
+    List<Rectangle> insideBox;
 
-    Rectangle[] outsideBox;
+    List<Rectangle> outsideBox;
 
     List<GameObject> colliderSoldiers;
 
@@ -29,41 +29,42 @@ public class MaskCollider : MonoBehaviour {
 
     #endregion
 
-    #region 初始化,外部调用
+    #region 初始化或者更新碰撞体列表
 
     public void InitWorldColliders(Rectangle maskRectangle)
     {
         colliderSoldier = Resources.Load(colliderSoldierPath, typeof(GameObject));
-        insideBox = new Rectangle[insideLandform.Count];
-        outsideBox = new Rectangle[outsideLandform.Count];
         colliderSoldiers = new List<GameObject>();
+        insideBox = new List<Rectangle>();
+        outsideBox = new List<Rectangle>();
+
         InitRectangle();
-        //首先隐藏底片世界的碰撞体
-        for (int i = 0; i < insideBox.Length; i++)
-        {
-            insideLandform[i].enabled = false;
-        }
+
         UpdateLandformCollider(maskRectangle);
     }
 
     void InitRectangle()
     {
-        for (int i = 0; i < insideBox.Length; i++)
+        for (int i = 0; i < insideLandform.Count; i++)
         {
             Bounds colliderBounds = insideLandform[i].bounds;
-            insideBox[i].minX = colliderBounds.min.x;
-            insideBox[i].minY = colliderBounds.min.y;
-            insideBox[i].maxX = colliderBounds.max.x;
-            insideBox[i].maxY = colliderBounds.max.y;
+            Rectangle rect;
+            rect.minX = colliderBounds.min.x;
+            rect.minY = colliderBounds.min.y;
+            rect.maxX = colliderBounds.max.x;
+            rect.maxY = colliderBounds.max.y;
             insideLandform[i].enabled = false;//游戏开始先禁用底片世界的碰撞体
+            insideBox.Add(rect);
         }
-        for (int i = 0; i < outsideBox.Length; i++)
+        for (int i = 0; i < outsideLandform.Count; i++)
         {
             Bounds bounds = outsideLandform[i].bounds;
-            outsideBox[i].minX = bounds.min.x;
-            outsideBox[i].maxX = bounds.max.x;
-            outsideBox[i].minY = bounds.min.y;
-            outsideBox[i].maxY = bounds.max.y;
+            Rectangle rect;
+            rect.minX = bounds.min.x;
+            rect.maxX = bounds.max.x;
+            rect.minY = bounds.min.y;
+            rect.maxY = bounds.max.y;
+            outsideBox.Add(rect);
         }
     }
      
@@ -74,7 +75,7 @@ public class MaskCollider : MonoBehaviour {
     public void UpdateLandformCollider(Rectangle maskRectangle)
     {
         ClearColliderSoldiers();
-        for (int i = 0; i < insideBox.Length; i++)
+        for (int i = 0; i < insideBox.Count; i++)
         {
             Rectangle? ConvergenceRect = MathCalulate.ConvergenceRectangle(insideBox[i], maskRectangle);
             if (ConvergenceRect != null && !MathCalulate.ifRectCanIgnore(ConvergenceRect.Value))//如果相交生成哨兵碰撞体
@@ -83,7 +84,7 @@ public class MaskCollider : MonoBehaviour {
             }
         }
 
-        for(int i = 0; i< outsideBox.Length;i++)
+        for(int i = 0; i< outsideBox.Count;i++)
         {
             SetOutsideColliderPos(outsideLandform[i], outsideBox[i], maskRectangle);
         }
@@ -141,5 +142,31 @@ public class MaskCollider : MonoBehaviour {
 
     #endregion
 
+    #region 更新碰撞体列表
+
+    public void UpdateColliderList(Transform level)
+    {
+        Transform outsideParent = level.GetChild(0).GetChild(0);
+        if(level.GetChild(0).childCount > 1)
+        {
+            Transform insideParent = level.GetChild(0).GetChild(1);
+            InitColliderList(insideParent, insideLandform);
+        }    
+        InitColliderList(outsideParent, outsideLandform);      
+        insideBox.Clear();
+        outsideBox.Clear();
+        ClearColliderSoldiers();
+        InitRectangle();
+    }
+
+    void InitColliderList(Transform parent,List<BoxCollider2D> landform)
+    {
+        landform.Clear();
+        for (int i = 0; i < parent.childCount; i++)
+        {
+            landform.Add(parent.GetChild(i).GetComponent<BoxCollider2D>());
+        }
+    }
+    #endregion
 
 }

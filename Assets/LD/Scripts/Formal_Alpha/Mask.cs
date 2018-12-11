@@ -69,7 +69,6 @@ public class Mask : MonoBehaviour {
         hasDrag = false;
         hitted = false;
         getAttached = true;
-        InitMask(); 
         maskCollider.InitWorldColliders(GetOutMaskContour());
     }
 
@@ -81,7 +80,26 @@ public class Mask : MonoBehaviour {
 
     #endregion
 
-    #region 设置并获得底片属性
+    #region 设置/获得底片属性
+
+    public void SetMaskPosAtScreenVertex()
+    {
+        maskTransform.position = new Vector3(MathCalulate.ScreenRect.maxX, MathCalulate.ScreenRect.maxY, -1);
+        InitMask();
+    }
+
+    public void SetMaskSize(Vector2 bodySize,Vector2 borderSize)
+    {
+
+    }
+
+    public void MoveToNewLevel()
+    {
+        Rectangle screenRect = MathCalulate.ScreenRect;
+        attachPos = new Vector3(screenRect.maxX, screenRect.maxY, -1);
+        maskTransform.position = (Vector2)attachPos + new Vector2(halfWidth, halfHeight);
+        getAttached = false;
+    }
 
     private float GetMinX()
     {
@@ -333,7 +351,10 @@ public class Mask : MonoBehaviour {
         {
             getAttached = true;
             maskCollider.UpdateLandformCollider(GetOutMaskContour());
-            UpdateColliderEvent(GetOutMaskContour());
+            if(UpdateColliderEvent != null)
+            {
+                UpdateColliderEvent(GetOutMaskContour());
+            }          
         }
     }
 

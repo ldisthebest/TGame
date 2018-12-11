@@ -86,7 +86,7 @@ public class PlayerAction : MonoBehaviour {
                 PlayAnimation("走",3.5f);
                 break;
             case PlayerState.Climb:
-                PlayAnimation("走",1);
+                PlayAnimation("走",3.5f);
                 break;
             case PlayerState.Push:
                 PlayAnimation("走", 3.5f);
@@ -96,7 +96,7 @@ public class PlayerAction : MonoBehaviour {
                 PlayAnimation("走", 3.5f);
                 break;
             case PlayerState.Slide:
-                PlayAnimation("走",1);
+                PlayAnimation("走",3.5f);
                 break;
         }
     }

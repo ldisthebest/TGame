@@ -45,7 +45,7 @@ GameObject:
   m_IsActive: 1
 --- !u!1 &1300756294698602
 GameObject:
-  m_ObjectHideFlags: 0
+  m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   serializedVersion: 6
@@ -60,7 +60,7 @@ GameObject:
   m_IsActive: 1
 --- !u!1 &1350013119580154
 GameObject:
-  m_ObjectHideFlags: 1
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   serializedVersion: 6
@@ -109,6 +109,21 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &1991613686910446
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4845636892677754}
+  m_Layer: 9
+  m_Name: mid
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!4 &4126415019308838
 Transform:
   m_ObjectHideFlags: 1
@@ -116,13 +131,12 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1300756294698602}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.22755879, y: -0.0026087658, z: 0}
+  m_LocalPosition: {x: 0.22755858, y: -0.0026087658, z: 0}
   m_LocalScale: {x: 0.23704042, y: 0.2608766, z: 1}
   m_Children:
-  - {fileID: 4300996937532584}
   - {fileID: 4408082875278230}
   - {fileID: 4595395346897530}
-  m_Father: {fileID: 4556321088752318}
+  m_Father: {fileID: 4845636892677754}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4130792983248568
@@ -136,7 +150,7 @@ Transform:
   m_LocalScale: {x: 0.049939383, y: 0.08837178, z: 1}
   m_Children: []
   m_Father: {fileID: 4556321088752318}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4300996937532584
 Transform:
@@ -145,11 +159,11 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1350013119580154}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.831, y: 0.003, z: 0}
-  m_LocalScale: {x: 4.443228, y: 3.4830077, z: 1}
+  m_LocalPosition: {x: 0.42453948, y: -0.0018261361, z: 0}
+  m_LocalScale: {x: 1.0532246, y: 0.9086352, z: 1}
   m_Children: []
-  m_Father: {fileID: 4126415019308838}
-  m_RootOrder: 0
+  m_Father: {fileID: 4556321088752318}
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4408082875278230
 Transform:
@@ -162,7 +176,7 @@ Transform:
   m_LocalScale: {x: 2.5665002, y: 0.751679, z: 1}
   m_Children: []
   m_Father: {fileID: 4126415019308838}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4556321088752318
 Transform:
@@ -174,7 +188,8 @@ Transform:
   m_LocalPosition: {x: -100.63, y: 0.01, z: 0}
   m_LocalScale: {x: 4.21869, y: 3.83323, z: 1}
   m_Children:
-  - {fileID: 4126415019308838}
+  - {fileID: 4845636892677754}
+  - {fileID: 4300996937532584}
   - {fileID: 4130792983248568}
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -190,7 +205,21 @@ Transform:
   m_LocalScale: {x: 1.7404212, y: 1.4181926, z: 1}
   m_Children: []
   m_Father: {fileID: 4126415019308838}
-  m_RootOrder: 2
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4845636892677754
+Transform:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1991613686910446}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 4126415019308838}
+  m_Father: {fileID: 4556321088752318}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!61 &61558100375219506
 BoxCollider2D:
@@ -315,7 +344,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: -2
   m_Sprite: {fileID: 21300000, guid: 6fbacc79f877c14479c84bfb1f875116, type: 3}
   m_Color: {r: 0.7001183, g: 0.8867924, b: 0.53960484, a: 1}
   m_FlipX: 0

@@ -24,6 +24,8 @@ public class Box : MonoBehaviour {
 
     BoxInteraction boxUI;
 
+    Transform parent;
+
     #endregion
 
     #region 序列化私有字段
@@ -52,6 +54,8 @@ public class Box : MonoBehaviour {
         boxUI = Instantiate(boxUIObject, Vector3.zero, Quaternion.identity).GetComponent<BoxInteraction>();
         boxUI.Init(this);
 
+        parent = transform.parent;
+
         mask = GameObject.FindWithTag("Mask").GetComponent<Mask>();
 
         player = GameObject.FindWithTag("Player").GetComponent<PlayerController2D>();
@@ -71,6 +75,11 @@ public class Box : MonoBehaviour {
 
     void OnDestroy()
     {
+        player.ShowUiEvent -= ShowUI;
+
+        player.HideUiEvent -= HideUI;
+
+        mask.UpdateColliderEvent -= ChangeColliderState;
         //if(boxUI.gameObject != null)
         //{
         //    Destroy(boxUI.gameObject);
@@ -203,7 +212,7 @@ public class Box : MonoBehaviour {
     public void EndMove()
     {   
         //transform.position = MathCalulate.GetHalfVector2(transform.position);
-        theTransform.SetParent(null);
+        theTransform.SetParent(parent);
         if (mask.IsInRectangle(theTransform.position))
         {
             SetLayer("Default");

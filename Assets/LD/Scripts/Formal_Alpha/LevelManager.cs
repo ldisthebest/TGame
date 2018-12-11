@@ -2,150 +2,151 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class LevelManager : MonoBehaviour {
 
-    public static LevelManager Instance { get; private set; }
+    enum LevelMode
+    {
+        release = 0,
+        debug
+    }
+
+    #region 常量
+    const float intervalTime = 0.01f;
+    #endregion
+
+    #region 序列化的字段
+    [SerializeField]
+    string[] levelPrefabPath;
 
     [SerializeField]
-    Transform cameras;
+    Vector2[] cameraPos;
 
     [SerializeField]
-    Transform mask;
+    Vector2[] playerBeginPos;
 
     [SerializeField]
-    int[] cameraPosX;
+    Vector2[] playerPassPos;
 
     [SerializeField]
-    Vector3[] maskSize;
+    Vector2[] maskBodySize;
 
     [SerializeField]
-    Vector2[] playerBeginPos; 
+    Vector2[] maskBorderSize;
 
     [SerializeField]
-    Vector2[] passPos;
-
-    [SerializeField]
-    int moveSpeed;
-
-    [SerializeField]
-    int playerSpeed;
-
-    [SerializeField]
-    Transform player;
-
-    [SerializeField]
-    GameObject over;
-    PlayerController2D controller;
-
-    bool cameraMove;
-
-    bool playerMove;
-
-    bool maskMove;
+    float cameraMoveSpeed;
 
     [SerializeField]
     int currentLevel;
 
-    Camera camera;
+    [SerializeField]
+    LevelMode levelmode;
 
-    void Awake()
+    #endregion
+
+    #region 非序列化的字段
+
+    Camera mainCamera;
+
+    PlayerController2D player;
+
+    Mask mask;
+
+    MaskCollider colliderManager;
+
+    GameObject nowlevel,pastlevel;
+
+    #endregion
+
+
+    private void Start()
     {
-        camera = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
-       
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        cameraMove = false;
-        maskMove = false;
-       
-        controller = player.GetComponent<PlayerController2D>();
-        Init();
-        MathCalulate.UpdateScreeenRect(camera);
+        mainCamera = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
+        player = GameObject.FindWithTag("Player").GetComponent<PlayerController2D>();
+        mask = GameObject.FindWithTag("Mask").GetComponent<Mask>();
+        colliderManager = mask.GetComponent<MaskCollider>();
+        player.PassLevelEvent += PassLevel;
+
+        InitSceneItemPos();     
     }
 
-    void Init()
+    void InitSceneItemPos()
     {
-        cameras.position = new Vector2(cameraPosX[currentLevel],0);
-        player.position = playerBeginPos[currentLevel];
+        transform.position = cameraPos[currentLevel];
+        MathCalulate.UpdateScreeenRect(mainCamera);
+        player.SetInitialPos(playerBeginPos[currentLevel]);
         if(currentLevel != 0)
-        mask.position = new Vector3(cameraPosX[currentLevel] + 6.5f, 3.5f, -1);
+        {
+            mask.SetMaskPosAtScreenVertex();
+            //mask.SetMaskSize(Vector2.zero,Vector2.zero);
+        }
+
+        if(levelmode == LevelMode.release)
+        {
+            LoadNextLevel();
+            colliderManager.UpdateColliderList(nowlevel.transform);
+        }
     }
 
-    void Update()   
+    void PassLevel(Vector2 playerPos)
     {
-        if(cameraMove)
+        if(playerPos == playerPassPos[currentLevel])
         {
-            cameras.position = Vector2.MoveTowards(cameras.position, new Vector2(cameraPosX[currentLevel], 0), Time.deltaTime * moveSpeed);
-            if (cameras.position.x == cameraPosX[currentLevel])
+                     
+            //到达章节最后一关
+            if (currentLevel == levelPrefabPath.Length - 1)
             {
-                cameraMove = false;
-                playerMove = true;
-                MathCalulate.UpdateScreeenRect(camera);
-                controller.GetComponent<PlayerAction>().SetPlayerAnimation(PlayerState.Run);
-                controller.enabled = false;
-            }
-        }
-
-        if(playerMove)
-        {
-            SetPlayer();
-        }
-
-        if(maskMove)
-        {
-            SetMask();
-        }
-    }
-
-    void SetMask()
-    {
-       
-        mask.position = Vector3.MoveTowards(mask.position, new Vector3(cameraPosX[currentLevel] + 6.5f, 3.5f, -1), Time.deltaTime * moveSpeed);
-        if (mask.position == new Vector3(cameraPosX[currentLevel] + 6.5f, 3.5f, -1))
-        {
-            controller.enabled = true;
-            mask.GetComponent<Mask>().enabled = true;
-            maskMove = false;
-        }
-    }
-
-    void SetPlayer()
-    {
-        
-        player.position = Vector2.MoveTowards(player.position, playerBeginPos[currentLevel],Time.deltaTime* playerSpeed);
-        
-        if ((Vector2)player.position == playerBeginPos[currentLevel])
-        {
-            //mask.position = new Vector3(cameraPosX[currentLevel] + 6.5f, 3.5f,-1);
-            controller.GetComponent<PlayerAction>().SetPlayerAnimation(PlayerState.Idel);
-            
-            playerMove = false;
-            maskMove = true;
-            mask.position = new Vector3(cameraPosX[currentLevel] + 12.5f, 9.5f, -1);
-            mask.GetComponent<Mask>().enabled = false;
-        }
-    }
-    public void CanPassLevel()
-    {
-        if((Vector2)player.position == passPos[currentLevel])
-        {
-            if(currentLevel == passPos.Length - 1)
-            {
-                GameOver();
+                Debug.Log("Game Over");
                 return;
             }
-            cameraMove = true;
+
+            //过关
             currentLevel++;
+
+            if(levelmode == LevelMode.release)
+            {
+                LoadNextLevel();
+                colliderManager.UpdateColliderList(nowlevel.transform);
+            }
+
+            StartCoroutine(CameraMove());
+            player.MoveToLevel(playerBeginPos[currentLevel]);
         }
     }
 
-    void GameOver()
+
+    IEnumerator CameraMove()
+    {      
+        Vector2 targetPos = cameraPos[currentLevel];
+        while ((Vector2)transform.position != cameraPos[currentLevel])
+        {
+            transform.position = Vector2.MoveTowards(transform.position, targetPos, Time.deltaTime * cameraMoveSpeed);
+            yield return new WaitForSeconds(intervalTime);
+        }
+        MathCalulate.UpdateScreeenRect(mainCamera);
+        mask.MoveToNewLevel();
+
+        if(levelmode == LevelMode.release)
+        {
+            UnloadPastLevel();
+        }
+    }
+
+    void LoadNextLevel()
     {
-        over.SetActive(true);
-        controller.enabled = false;
-        mask.GetComponent<Mask>().enabled = false;
-        controller.GetComponent<PlayerAction>().SetPlayerAnimation(PlayerState.Idel);
+        pastlevel = nowlevel;
+        GameObject level = Resources.Load<GameObject>(levelPrefabPath[currentLevel]);
+        nowlevel = Instantiate(level, level.transform.position, Quaternion.identity);
+        
+    }
+
+    void UnloadPastLevel()
+    {
+        if (pastlevel != null)
+        {
+            Destroy(pastlevel);
+        }
     }
 
 }

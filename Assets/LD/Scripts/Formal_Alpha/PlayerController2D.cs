@@ -10,6 +10,10 @@ public class PlayerController2D : MonoBehaviour {
 
     public delegate void HideBoxUiHandler();
     public event HideBoxUiHandler HideUiEvent;
+
+    public delegate void PassLevelHander(Vector2 playerPos);
+    public event PassLevelHander PassLevelEvent;
+
     #endregion
 
     #region 非序列化的私有字段
@@ -102,7 +106,6 @@ public class PlayerController2D : MonoBehaviour {
         GetDestination = true;
         mainCamera = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
         mask = GameObject.FindWithTag("Mask").GetComponent<Mask>();
-        SetInitialPos();
         
     }
 
@@ -114,8 +117,9 @@ public class PlayerController2D : MonoBehaviour {
         playerContour.maxY = playerTransform.position.y + topBorder;
     }
 
-    private void SetInitialPos()
-    {   
+    public void SetInitialPos(Vector2 startPos)
+    { 
+        playerTransform.position = startPos;
         SetPlayerContour();
         float x = MathCalulate.GetHalfValue(playerTransform.position.x);
         RaycastHit2D hit = Physics2D.Raycast(playerTransform.position,Vector2.down,20);
@@ -350,7 +354,10 @@ public class PlayerController2D : MonoBehaviour {
             UpdatePlayerAnimation(0);
             SetPlayerTowards();
             //关闭箱子的UI
-            HideUiEvent();
+            if(HideUiEvent != null)
+            {
+                HideUiEvent();
+            }         
         }
         //否则显示不能走的原因
         else
@@ -592,7 +599,10 @@ public class PlayerController2D : MonoBehaviour {
         }
         playerAction.SetPlayerAnimation(PlayerState.Idel);
         GetDestination = true;
-        ShowUiEvent(PlayerCenter);
+        if(ShowUiEvent != null)
+        {
+            ShowUiEvent(PlayerCenter);
+        }      
         CheckPassLevel();
     }
     #endregion
@@ -721,10 +731,22 @@ public class PlayerController2D : MonoBehaviour {
     }
     #endregion
 
+    #region 主角过关相关
+
     void CheckPassLevel()
     {
-        LevelManager.Instance.CanPassLevel();
+        if(PassLevelEvent != null)
+        {
+            PassLevelEvent(playerTransform.position);
+        }       
     }
+
+    public void MoveToLevel(Vector2 playerStartPos)
+    {
+        GetDestination = false;
+        routePoint.Add(playerStartPos);
+    }
+    #endregion
 }
 
 
