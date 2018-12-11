@@ -46,8 +46,12 @@ public class LevelManager : MonoBehaviour {
     [SerializeField]
     int currentLevel;
 
+    Camera camera;
+
     void Awake()
     {
+        camera = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
+       
         if (Instance == null)
         {
             Instance = this;
@@ -57,6 +61,7 @@ public class LevelManager : MonoBehaviour {
        
         controller = player.GetComponent<PlayerController2D>();
         Init();
+        MathCalulate.UpdateScreeenRect(camera);
     }
 
     void Init()
@@ -76,7 +81,7 @@ public class LevelManager : MonoBehaviour {
             {
                 cameraMove = false;
                 playerMove = true;
-                
+                MathCalulate.UpdateScreeenRect(camera);
                 controller.GetComponent<PlayerAction>().SetPlayerAnimation(PlayerState.Run);
                 controller.enabled = false;
             }

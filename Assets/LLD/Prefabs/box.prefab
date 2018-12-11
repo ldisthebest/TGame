@@ -78,11 +78,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e74cb4fd46d47142b7c756b5eaec881, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  IsMove: 0
+  gravity: 0.476
+  bottomOffoset: 0.5
   IsPush: 0
-  Player: {fileID: 0}
-  boxUI: {fileID: 0}
-  dropSpeed: 6
 --- !u!212 &212111791081029482
 SpriteRenderer:
   m_ObjectHideFlags: 1
@@ -117,7 +115,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 3
   m_Sprite: {fileID: 21300000, guid: 6fbacc79f877c14479c84bfb1f875116, type: 3}
   m_Color: {r: 0.9427507, g: 1, b: 0, a: 1}
   m_FlipX: 0

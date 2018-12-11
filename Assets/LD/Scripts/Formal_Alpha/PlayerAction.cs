@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using DragonBones;
 
 public enum PlayerState
 {
@@ -32,21 +33,13 @@ public class PlayerAction : MonoBehaviour {
 
     #region 私有字段
 
-    Animator animator;
-
-    PlayerState currentState;
+    UnityArmatureComponent armture;
 
     #endregion
 
-    #region 公有属性
+    #region 自动属性
 
-    public PlayerState CurrentState
-    {
-        get
-        {
-            return currentState;
-        }
-    }
+    public PlayerState CurrentState { get; private set; }
 
     #endregion
 
@@ -54,19 +47,27 @@ public class PlayerAction : MonoBehaviour {
 
     void Awake()
     {
-        animator = GetComponent<Animator>();
-        currentState = PlayerState.Idel;
+        armture = GetComponent<UnityArmatureComponent>();
+        CurrentState = PlayerState.Idel;
     }
 
     #endregion
 
     #region 私有方法
-    void PlayAnimation(string AnimClip)
+    void PlayAnimation(string AnimClip,float animaSpeed)
     {
-        if (!animator.GetCurrentAnimatorStateInfo(0).IsName(AnimClip))
+        if (armture.animation.lastAnimationName != AnimClip)
         {
-            animator.Play(AnimClip);
-            
+            if(AnimClip == "呼吸")
+            {
+                armture.animation.FadeIn(AnimClip,0.1f);
+            }
+            else
+            {
+                armture.animation.Play(AnimClip);
+            }            
+            armture.animation.timeScale = animaSpeed;
+            //Debug.Log(AnimClip);
         }
     }
     
@@ -75,34 +76,34 @@ public class PlayerAction : MonoBehaviour {
     #region 公有方法，外部调用
     public void SetPlayerAnimation(PlayerState state)
     {
-        currentState = state;
+        CurrentState = state;
         switch (state)
         {
             case PlayerState.Idel:
-                PlayAnimation("Idel");
+                PlayAnimation("呼吸",0.6f);
                 break;
             case PlayerState.Run:
-                PlayAnimation("Run");
+                PlayAnimation("走",3.5f);
                 break;
             case PlayerState.Climb:
-                PlayAnimation("Climb");
+                PlayAnimation("走",1);
                 break;
             case PlayerState.Push:
-                PlayAnimation("Push");
+                PlayAnimation("走", 3.5f);
                 break;
             //暂无拉箱子动画，以推箱子动画代替
             case PlayerState.Pull:
-                PlayAnimation("Push");
+                PlayAnimation("走", 3.5f);
                 break;
             case PlayerState.Slide:
-                PlayAnimation("Push");
+                PlayAnimation("走",1);
                 break;
         }
     }
 
     public bool CanPlayerChangeRoute()
     {
-        if(currentState == PlayerState.Climb)
+        if(CurrentState == PlayerState.Climb)
         {
             return false;
         }
@@ -111,7 +112,7 @@ public class PlayerAction : MonoBehaviour {
 
     public bool IsPlayerWithBox()
     {
-        if(currentState == PlayerState.Push || currentState == PlayerState.Pull)
+        if(CurrentState == PlayerState.Push || CurrentState == PlayerState.Pull ||CurrentState == PlayerState.Slide)
         {
             return true;
         }

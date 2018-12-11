@@ -22,10 +22,7 @@ public class Mask : MonoBehaviour {
     float outHalfWidth, outHalfHeight;
 
     [SerializeField]
-    float attachSpeed;
-
-    [SerializeField]
-    PlayerAction playerAction;
+    float attachSpeed;  
 
     #endregion
 
@@ -40,6 +37,8 @@ public class Mask : MonoBehaviour {
     Camera camer;
 
     PlayerController2D player;
+
+    PlayerAction playerAction;
 
     Transform maskTransform;
 
@@ -63,13 +62,14 @@ public class Mask : MonoBehaviour {
     void Awake()
     {
         maskTransform = transform;
+        playerAction = GameObject.FindWithTag("Player").GetComponent<PlayerAction>();
         player = playerAction.GetComponent<PlayerController2D>();      
         camer = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
         maskCollider = GetComponent<MaskCollider>();
         hasDrag = false;
         hitted = false;
         getAttached = true;
-        InitMask();
+        InitMask(); 
         maskCollider.InitWorldColliders(GetOutMaskContour());
     }
 
@@ -274,13 +274,14 @@ public class Mask : MonoBehaviour {
     bool OnMouseDownInMask()
     {
         Vector2 hitPos = camer.ScreenToWorldPoint(Input.mousePosition);
-        //如果没点中底片或者主角现在没有静止就返回
+        
         if (IsInRectangle(hitPos))
         {
             firstHitPos = hitPos;
             startPos = maskTransform.position;
         }
-        if (!IsInRectangle(hitPos) || playerAction.CurrentState != PlayerState.Idel || IsInRectangle(player.PlayerPos))
+        //如果没点中底片或者主角现在没有静止就返回
+        if (!IsInRectangle(hitPos) || playerAction.CurrentState != PlayerState.Idel || IsInRectangle(player.PlayerCenter))
         {
             return false;
         }
@@ -318,6 +319,8 @@ public class Mask : MonoBehaviour {
             Vector2 halfPos = MathCalulate.GetHalfVector2(maskTransform.position);
             attachPos = new Vector3(halfPos.x, halfPos.y, -1);
             attachPos += (Vector3)MathCalulate.UpdateMaskPosOffoset(player.PlayerContour, GetOutMaskContour(attachPos));
+
+            CheckOutOfScreenBorder();
         }
     }
 
@@ -330,6 +333,7 @@ public class Mask : MonoBehaviour {
         {
             getAttached = true;
             maskCollider.UpdateLandformCollider(GetOutMaskContour());
+            UpdateColliderEvent(GetOutMaskContour());
         }
     }
 
@@ -340,6 +344,19 @@ public class Mask : MonoBehaviour {
         firstHitPos = newHitPos;
         return dragOffoset;
     }
+
+    public void CheckOutOfScreenBorder()
+    {
+        Rectangle maskRect = MathCalulate.InitRect(attachPos,outHalfWidth,outHalfHeight);
+        Rectangle screenRect = MathCalulate.ScreenRect;
+
+        if (maskRect.minX >= screenRect.maxX || maskRect.maxX <= screenRect.minX || maskRect.minY >= screenRect.maxY || maskRect.maxY <= screenRect.minY)
+        {
+            attachPos = new Vector3(screenRect.maxX, screenRect.maxY,-1);
+            maskTransform.position = (Vector2)attachPos + new Vector2(halfWidth, halfHeight);
+        }
+    }
+
     #endregion
 
     #region 还原底片的一些标志位，外部调用
