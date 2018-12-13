@@ -34,6 +34,8 @@ public class ProgressManager : MonoBehaviour {
 
         //player.PassLevelEvent += PassLevel;
         player.OnMoveEvent += ShowMask;
+        player.EndMoveEvent += EventOnLevel3;
+        Time.timeScale = 3;
     }
 	
 	
@@ -95,5 +97,14 @@ public class ProgressManager : MonoBehaviour {
         player.playerPause = false;
         player.AutoMove(playerTargetPos[2]);
 
+    }
+
+    void EventOnLevel3(Vector2 playerPos)
+    {
+        if(playerPos == playerTargetPos[3])
+        {
+            player.EndMoveEvent -= EventOnLevel3;
+            ShowText(2);
+        }
     }
 }

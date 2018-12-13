@@ -4,11 +4,13 @@ using DragonBones;
 public enum PlayerState
 {
     Idel = 0,
-    Run = 1,
-    Climb = 2,
-    Push = 3,
-    Pull = 4,
-    Slide = 5
+    Run,
+    Climb,
+    Fall,
+    Push,
+    Pull,
+    Slide,
+    Stuck
 }
 
 public enum PlayerStuckInfo
@@ -54,49 +56,78 @@ public class PlayerAction : MonoBehaviour {
     #endregion
 
     #region 私有方法
-    void PlayAnimation(string AnimClip,float animaSpeed,float fadeSpeed,int playTimes = -1)
+    void PlayAnimation(string AnimClip,float animaSpeed,float fadeSpeed = 0,int playTimes = -1)
     {
-        if (armture.animation.lastAnimationName != AnimClip)
-        {
-            armture.animation.FadeIn(AnimClip, fadeSpeed,playTimes);
-            armture.animation.timeScale = animaSpeed;
-            //Debug.Log(AnimClip);
-        }
+        armture.animation.FadeIn(AnimClip, fadeSpeed, playTimes);
+        armture.animation.timeScale = animaSpeed;
     }
-    
+
+    void PlayRunAnimation()
+    {
+        string lastAnimationName = armture.animation.lastAnimationName;
+        if (lastAnimationName != "walk")
+        {
+            float fadeSpeed = 0;
+            if(lastAnimationName == "climb")
+            {
+                fadeSpeed = 1;
+            }
+            else if (lastAnimationName == "jump")
+            {
+                fadeSpeed = 0.5f;
+            }
+            armture.animation.FadeIn("walk", fadeSpeed);
+            armture.animation.timeScale = 3.5f;
+        }
+        
+    }
+
+
     #endregion
 
     #region 公有方法，外部调用
     public void SetPlayerAnimation(PlayerState state)
     {
         CurrentState = state;
+        JustSetAnimation(state);
+    }
+
+    public void JustSetAnimation(PlayerState state)
+    {
+        Debug.Log(armture.animation.lastAnimationName);
         switch (state)
         {
             case PlayerState.Idel:
-                PlayAnimation("breath",0.6f,0.1f);
+                PlayAnimation("breath", 0.6f, 0.1f);
                 break;
             case PlayerState.Run:
-                PlayAnimation("walk",3.5f,0);
+                PlayRunAnimation();
                 break;
             case PlayerState.Climb:
-                PlayAnimation("walk",3.5f,0,1);
+                PlayAnimation("climb", 1.5f, 0, 1);
+                break;
+            case PlayerState.Fall:
+                PlayAnimation("jump", 4.2f, 0, 1);
                 break;
             case PlayerState.Push:
-                PlayAnimation("pushbox", 3,0.5f);
+                PlayAnimation("pushbox", 3);
                 break;
             //暂无拉箱子动画，以推箱子动画代替
             case PlayerState.Pull:
-                PlayAnimation("towingbox", 3,0.5f);
+                PlayAnimation("towingbox", 3);
                 break;
             case PlayerState.Slide:
-                PlayAnimation("walk", 3.5f,1);
+                PlayAnimation("walk", 3.5f, 0);
+                break;
+            case PlayerState.Stuck:
+                PlayAnimation("on", 1, 0,1);
                 break;
         }
     }
 
     public bool CanPlayerChangeRoute()
     {
-        if(CurrentState == PlayerState.Climb)
+        if(CurrentState == PlayerState.Climb || CurrentState == PlayerState.Fall)
         {
             return false;
         }
@@ -115,6 +146,7 @@ public class PlayerAction : MonoBehaviour {
     public void ShowPlayerStuckInfo(PlayerStuckInfo stuckInfo)
     {
         //播放摇头动画
+        SetPlayerAnimation(PlayerState.Stuck);
         //显示图片
         Debug.Log(stuckInfo.ToString());
     }

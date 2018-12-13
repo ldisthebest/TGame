@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerController2D : MonoBehaviour {
+
 
 
     #region 事件委托
@@ -16,6 +18,9 @@ public class PlayerController2D : MonoBehaviour {
 
     public delegate void UpdateMoveHandler(Vector2 playerPos);
     public event UpdateMoveHandler OnMoveEvent;
+
+    public delegate void EndMoveHandler(Vector2 playerPos);
+    public event EndMoveHandler EndMoveEvent;
 
     #endregion
 
@@ -41,7 +46,7 @@ public class PlayerController2D : MonoBehaviour {
 
     bool hitMask = false;
 
-    Vector2 rayDirection;  
+    Vector2 rayDirection;
 
     #endregion
 
@@ -61,6 +66,12 @@ public class PlayerController2D : MonoBehaviour {
 
     [SerializeField]
     float maxClimbHeight, maxFallHeight;
+
+    [SerializeField]
+    Vector2[] climbPointCurve;
+
+    [SerializeField]
+    Vector2[] fallCurve;    
 
     #endregion
 
@@ -102,12 +113,13 @@ public class PlayerController2D : MonoBehaviour {
 
     #endregion
 
+
     
 
     #region 初始化
     void Awake()
     {
-        //canPlayerControl = true;
+        canPlayerControl = true;
         speed = moveSpeed;
         rayDirection = Vector2.right;
         playerTransform = transform;
@@ -578,7 +590,7 @@ public class PlayerController2D : MonoBehaviour {
     #region 移动逻辑
     void MoveToRoutePoint()
     {
-        if(routePoint.Count == 0 || playerPause)
+        if(routePoint.Count == 0 || playerPause || pointIndex == routePoint.Count)
         {
             GetDestination = true;
             return;
@@ -621,6 +633,10 @@ public class PlayerController2D : MonoBehaviour {
         {
             ShowUiEvent(PlayerCenter);
         }      
+        if(EndMoveEvent != null)
+        {
+            EndMoveEvent(playerTransform.position);
+        }
         if(!canPlayerControl)
         {
             canPlayerControl = true;
@@ -733,11 +749,12 @@ public class PlayerController2D : MonoBehaviour {
             }
             else if (currentPosY > nextPointY)
             {
-                playerAction.SetPlayerAnimation(PlayerState.Climb);
+                StartCoroutine(Fall());
             }
             else if (currentPosY < nextPointY)
             {
                 playerAction.SetPlayerAnimation(PlayerState.Climb);
+                StartCoroutine(Climb());
             }
         }    
     }
@@ -747,6 +764,72 @@ public class PlayerController2D : MonoBehaviour {
         playerAction.ShowPlayerStuckInfo(stuck);
     }
     #endregion
+
+    IEnumerator Climb()
+    {
+        playerPause = true;
+        int index = 0;
+        Vector2[] targetPos = new Vector2[climbPointCurve.Length];
+        float x = rayDirection.x;
+        for(int i = 0;i<targetPos.Length;i++)
+        {
+            targetPos[i] = (Vector2)playerTransform.position + new Vector2(climbPointCurve[i].x*x, climbPointCurve[i].y);
+        }
+        float climbSpeed = 1.5f;
+        while ((Vector2)playerTransform.position != targetPos[climbPointCurve.Length - 1])
+        {
+            playerTransform.position = Vector2.MoveTowards(playerTransform.position, targetPos[index],climbSpeed * Time.deltaTime);
+            if((Vector2)playerTransform.position == targetPos[index])
+            {
+                climbSpeed = 1.2f;
+                if(index == 0)
+                {
+                    yield return new WaitForSeconds(0.25f);
+                }
+                else if(index == 1)
+                {
+                    playerAction.JustSetAnimation(PlayerState.Run);
+                }
+                index++;
+            }
+            yield return new WaitForSeconds(0.01f);
+        }
+        playerTransform.position = routePoint[pointIndex];
+        //playerAction.JustSetAnimation(PlayerState.Idel);
+        //pointIndex++;
+        playerPause = false;
+        GetDestination = false;
+    }
+
+    IEnumerator Fall()
+    {
+        playerPause = true;
+        int index = 0;
+        Vector2[] targetPos = new Vector2[fallCurve.Length];
+        float x = rayDirection.x;
+        for (int i = 0; i < targetPos.Length; i++)
+        {
+            targetPos[i] = (Vector2)playerTransform.position + new Vector2(fallCurve[i].x * x, fallCurve[i].y);
+        }
+        playerAction.JustSetAnimation(PlayerState.Run);
+        float fallSpeed = moveSpeed;
+        while ((Vector2)playerTransform.position != targetPos[fallCurve.Length - 1])
+        {
+            playerTransform.position = Vector2.MoveTowards(playerTransform.position, targetPos[index], fallSpeed * Time.deltaTime);
+            if((Vector2)playerTransform.position == targetPos[0])
+            {
+                index++;
+                playerAction.SetPlayerAnimation(PlayerState.Fall);
+            }
+            yield return new WaitForSeconds(0.01f);
+        }
+        playerTransform.position = routePoint[pointIndex];
+        //playerAction.JustSetAnimation(PlayerState.Idel);
+        //pointIndex++;
+        playerPause = false;
+        GetDestination = false;
+    }
+
 
     #region 主角过关相关
 

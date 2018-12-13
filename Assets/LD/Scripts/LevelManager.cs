@@ -116,7 +116,7 @@ public class LevelManager : MonoBehaviour {
             }
 
             StartCoroutine(CameraMove());
-            player.AutoMove(playerBeginPos[currentLevel]);
+            
         }
     }
 
@@ -130,8 +130,8 @@ public class LevelManager : MonoBehaviour {
             yield return new WaitForSeconds(intervalTime);
         }
         MathCalulate.UpdateScreeenRect(mainCamera);
-
-        if(currentLevel == 3)
+        player.AutoMove(playerBeginPos[currentLevel]);
+        if (currentLevel >= 3)
         {
             mask.MoveToNewLevel();
         }
