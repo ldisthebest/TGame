@@ -35,6 +35,9 @@ public class LevelManager : MonoBehaviour {
     Vector2[] maskBorderSize;
 
     [SerializeField]
+    float[] inHalfSize;
+
+    [SerializeField]
     float cameraMoveSpeed;
 
     [SerializeField]
@@ -68,7 +71,7 @@ public class LevelManager : MonoBehaviour {
         colliderManager = mask.GetComponent<MaskCollider>();
         player.PassLevelEvent += PassLevel;
 
-        MathCalulate.UpdateScreeenRect(mainCamera);
+        
         player.SetInitialPos(playerBeginPos[currentLevel]);
 
         InitSceneItemPos();     
@@ -76,14 +79,16 @@ public class LevelManager : MonoBehaviour {
 
     void InitSceneItemPos()
     {
-        if(levelmode == LevelMode.debug)
+        
+        if (levelmode == LevelMode.debug)
         {
             transform.position = cameraPos[currentLevel];
-
+            MathCalulate.UpdateScreeenRect(mainCamera);
             if (currentLevel != 0)
             {
                 mask.SetMaskPosAtScreenVertex();
                 //mask.SetMaskSize(Vector2.zero,Vector2.zero);
+                mask.SetMaskSize(maskBodySize[currentLevel], maskBorderSize[currentLevel], inHalfSize[currentLevel]);
             }
         }
         
@@ -92,6 +97,8 @@ public class LevelManager : MonoBehaviour {
             LoadNextLevel();
             colliderManager.UpdateColliderList(nowlevel.transform);
         }
+
+       
     }
 
     void PassLevel(Vector2 playerPos)
@@ -131,8 +138,9 @@ public class LevelManager : MonoBehaviour {
         }
         MathCalulate.UpdateScreeenRect(mainCamera);
         player.AutoMove(playerBeginPos[currentLevel]);
-        if (currentLevel >= 3)
+        if (currentLevel >= 2)
         {
+            mask.SetMaskSize(maskBodySize[currentLevel],maskBorderSize[currentLevel],inHalfSize[currentLevel]);
             mask.MoveToNewLevel();
         }
        
