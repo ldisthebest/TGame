@@ -293,12 +293,12 @@ public class PlayerController2D : MonoBehaviour {
         while (currentGetPos.x != targetX)
         {
             //主角遇到了底片顶点
-            if (mask.IfVertexBlockInLand(currentGetPos + rayDirection)) 
+            if (mask.IfVertexBlockInLand(currentGetPos + rayDirection) && !ClimbCollider(currentGetPos))
             {
                 stuck = PlayerStuckInfo.PlayerStuckedByMaskVertex;
                 break;
             }
-            if(mask.IfPosJustOnBorderTop(currentGetPos))
+            if (mask.IfPosJustOnBorderTop(currentGetPos))
             {
                 stuck = PlayerStuckInfo.MoveToBorderTop;
                 currentGetPos -= rayDirection;
@@ -324,7 +324,7 @@ public class PlayerController2D : MonoBehaviour {
                     else
                     {
                         Vector2 judgePoint = currentGetPos + rayDirection - Vector2.up;
-                        if (mask.IfPointAtBorderY(judgePoint, judgePoint - rayDirection))
+                        if (mask.IfPointAtBorderY(judgePoint/*, judgePoint - rayDirection*/))
                         {
                             stuck = PlayerStuckInfo.OnMaskInsideY;
                             break;
@@ -353,12 +353,17 @@ public class PlayerController2D : MonoBehaviour {
                 //头顶无障碍并且高度合适能爬上去
                 if (NoneUpBarrier(currentGetPos) && CanClimb(currentGetPos))
                 {                  
-                    if (mask.IfPointAtBorderY(currentGetPos + Vector2.up,currentGetPos + Vector2.up + rayDirection))
+                    if (mask.IfPointAtBorderY(currentGetPos + Vector2.up, currentGetPos + Vector2.up + rayDirection))
                     {
                         stuck = PlayerStuckInfo.OnMaskInsideY;
                         break;
                     }
-                    AddRoutePoint(currentGetPos);
+                    if (mask.IfPosJustOnBorderTop(currentGetPos + Vector2.up + rayDirection))
+                    {
+                        stuck = PlayerStuckInfo.OnMaskInsideY;
+                        break;
+                    }
+                     AddRoutePoint(currentGetPos);
                     currentGetPos += Vector2.up + rayDirection;
                     AddRoutePoint(currentGetPos, forwardCollider);
                 }
@@ -843,10 +848,14 @@ public class PlayerController2D : MonoBehaviour {
 
     public void AutoMove(Vector2 targetPos)
     {
+        if (targetPos == (Vector2)playerTransform.position)
+        {
+            return;
+        }
         GetDestination = false;
         routePoint.Add(targetPos);
         UpdatePlayerAnimation(0);
-        canPlayerControl = false;
+        
     }
 
     public void StopMove()

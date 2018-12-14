@@ -94,7 +94,6 @@ public class PlayerAction : MonoBehaviour {
 
     public void JustSetAnimation(PlayerState state)
     {
-        Debug.Log(armture.animation.lastAnimationName);
         switch (state)
         {
             case PlayerState.Idel:
@@ -146,7 +145,7 @@ public class PlayerAction : MonoBehaviour {
     public void ShowPlayerStuckInfo(PlayerStuckInfo stuckInfo)
     {
         //播放摇头动画
-        SetPlayerAnimation(PlayerState.Stuck);
+        JustSetAnimation(PlayerState.Stuck);
         //显示图片
         Debug.Log(stuckInfo.ToString());
     }
