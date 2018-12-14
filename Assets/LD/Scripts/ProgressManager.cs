@@ -36,7 +36,7 @@ public class ProgressManager : MonoBehaviour {
         player = GameObject.FindWithTag("Player").GetComponent<PlayerController2D>();
         mask = GameObject.FindWithTag("Mask").GetComponent<Mask>();
         levelmanager = GetComponent<LevelManager>();
-        player.canPlayerControl = false;
+        //player.canPlayerControl = false;
 
         //player.PassLevelEvent += PassLevel;
         //player.OnMoveEvent += ShowMask;
