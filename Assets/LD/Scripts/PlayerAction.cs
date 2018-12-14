@@ -150,5 +150,10 @@ public class PlayerAction : MonoBehaviour {
         Debug.Log(stuckInfo.ToString());
     }
 
+    public void SetState(PlayerState state)
+    {
+        CurrentState = state;
+    }
+
     #endregion
 }

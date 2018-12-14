@@ -762,6 +762,7 @@ public class PlayerController2D : MonoBehaviour {
             }
             else if (currentPosY > nextPointY)
             {
+                playerAction.SetState(PlayerState.Fall);
                 StartCoroutine(Fall());
             }
             else if (currentPosY < nextPointY)
@@ -854,10 +855,16 @@ public class PlayerController2D : MonoBehaviour {
         }       
     }
 
+    public void SetPlayerCanBeControl(bool active)
+    {
+        canPlayerControl = active;
+    }
+
     public void AutoMove(Vector2 targetPos)
     {
         if (targetPos == (Vector2)playerTransform.position)
         {
+            canPlayerControl = true;
             return;
         }
         GetDestination = false;

@@ -132,7 +132,7 @@ public class LevelManager : MonoBehaviour {
                 LoadNextLevel();
                 colliderManager.UpdateColliderList(nowlevel.transform);
             }
-
+            player.SetPlayerCanBeControl(false);
             StartCoroutine(CameraMove());
             
         }
