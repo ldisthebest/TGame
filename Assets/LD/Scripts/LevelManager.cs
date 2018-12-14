@@ -134,8 +134,9 @@ public class LevelManager : MonoBehaviour {
         }
         MathCalulate.UpdateScreeenRect(mainCamera);
         player.AutoMove(playerBeginPos[currentLevel]);
-        if (currentLevel >= 3)
+        if (currentLevel >= 2)
         {
+            mask.SetMaskSize(maskBodySize[currentLevel],maskBorderSize[currentLevel]);
             mask.MoveToNewLevel();
         }
        

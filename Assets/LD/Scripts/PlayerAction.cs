@@ -104,17 +104,17 @@ public class PlayerAction : MonoBehaviour {
                 PlayRunAnimation();
                 break;
             case PlayerState.Climb:
-                PlayAnimation("climb", 1.5f, 0, 1);
+                PlayAnimation("climb", 1.5f, 0.0f, 1);
                 break;
             case PlayerState.Fall:
                 PlayAnimation("jump", 4.2f, 0, 1);
                 break;
             case PlayerState.Push:
-                PlayAnimation("pushbox", 3);
+                PlayAnimation("pushbox", 2.8f,0.8f);
                 break;
             //暂无拉箱子动画，以推箱子动画代替
             case PlayerState.Pull:
-                PlayAnimation("towingbox", 3);
+                PlayAnimation("towingbox", 2.8f);
                 break;
             case PlayerState.Slide:
                 PlayAnimation("walk", 3.5f, 0);

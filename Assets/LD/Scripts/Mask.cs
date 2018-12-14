@@ -48,6 +48,10 @@ public class Mask : MonoBehaviour {
 
     MaskCollider maskCollider;
 
+    Transform maskBody;
+
+    Transform maskBorder;
+
     #endregion
 
     #region 公有字段
@@ -66,6 +70,8 @@ public class Mask : MonoBehaviour {
         player = playerAction.GetComponent<PlayerController2D>();      
         camer = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
         maskCollider = GetComponent<MaskCollider>();
+        maskBody = transform.GetChild(0);
+        maskBorder = transform.GetChild(1);
         hasDrag = false;
         hitted = false;
         getAttached = true;
@@ -90,6 +96,10 @@ public class Mask : MonoBehaviour {
 
     public void SetMaskSize(Vector2 bodySize,Vector2 borderSize)
     {
+        if (bodySize == Vector2.zero)
+            return;
+        maskBody.localScale = bodySize;
+        maskBorder.localScale = borderSize; 
 
     }
 
