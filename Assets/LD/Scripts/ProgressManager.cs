@@ -26,18 +26,21 @@ public class ProgressManager : MonoBehaviour {
 
     PlayerController2D player;
 
+    LevelManager levelmanager;
+
     Mask mask;
 
 	
 	void Awake () {
         anima = GetComponent<Animation>();
         player = GameObject.FindWithTag("Player").GetComponent<PlayerController2D>();
-        mask = GameObject.FindWithTag("Mask").GetComponent<Mask>();     
+        mask = GameObject.FindWithTag("Mask").GetComponent<Mask>();
+        levelmanager = GetComponent<LevelManager>();
         player.canPlayerControl = false;
 
         //player.PassLevelEvent += PassLevel;
         //player.OnMoveEvent += ShowMask;
-        //player.EndMoveEvent += EventOnLevel3;
+        player.EndMoveEvent += EventOnLevel3;
         //Time.timeScale = 3;
     }
 	
@@ -56,7 +59,7 @@ public class ProgressManager : MonoBehaviour {
         Destroy(title.gameObject,10);
         anima.Play("ViewDown");
         Destroy(menu);
-        //StartCoroutine(EventOnLevel0());
+        StartCoroutine(EventOnLevel0());
         
     }
 
@@ -68,48 +71,48 @@ public class ProgressManager : MonoBehaviour {
 
     IEnumerator EventOnLevel0()
     {
-        yield return new WaitForSeconds(2.5f);             
+        yield return new WaitForSeconds(2.5f);
+        levelmanager.SnowMoveOutParent();
         ShowText(0);
-        yield return new WaitForSeconds(6);
-        
-        player.AutoMove(playerTargetPos[0]);
+       
         textIndex++;
     }
 
-    void PassLevel(Vector2 playerPos)
-    {
-        //HideText();
-        //player.PassLevelEvent -= PassLevel;
-    }
 
-    void ShowMask(Vector2 playerPos)
-    {
-        if(playerPos.x > playerTargetPos[1].x)
-        {
-            player.OnMoveEvent -= ShowMask;
-            player.StopMove();
-            mask.MoveToNewLevel();
-            ShowText(1);
-            textIndex++;
-            StartCoroutine(PLayerMoveAfterTextOver());
-        }
+    //void ShowMask(Vector2 playerPos)
+    //{
+    //    if(playerPos.x > playerTargetPos[1].x)
+    //    {
+    //        player.OnMoveEvent -= ShowMask;
+    //        player.StopMove();
+    //        mask.MoveToNewLevel();
+    //        ShowText(1);
+    //        textIndex++;
+    //        StartCoroutine(PLayerMoveAfterTextOver());
+    //    }
        
-    }
+    //}
 
-    IEnumerator PLayerMoveAfterTextOver()
-    {
-        yield return new WaitForSeconds(4);
-        player.playerPause = false;
-        player.AutoMove(playerTargetPos[2]);
+    //IEnumerator PLayerMoveAfterTextOver()
+    //{
+    //    yield return new WaitForSeconds(4);
+    //    player.playerPause = false;
+    //    player.AutoMove(playerTargetPos[2]);
 
-    }
+    //}
 
     void EventOnLevel3(Vector2 playerPos)
     {
-        if(playerPos == playerTargetPos[3])
+        if (textIndex == 0) return;
+        if(playerPos.x == playerTargetPos[textIndex-1].x)
         {
-            player.EndMoveEvent -= EventOnLevel3;
-            ShowText(2);
+            //player.EndMoveEvent -= EventOnLevel3;
+            ShowText(textIndex);
+            textIndex++;
+            if(textIndex == textGuide.Length)
+            {
+                player.EndMoveEvent -= EventOnLevel3;
+            }
         }
     }
 }

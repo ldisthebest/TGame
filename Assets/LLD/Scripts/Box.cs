@@ -157,6 +157,8 @@ public class Box : MonoBehaviour {
             theTransform.position = Vector2.MoveTowards(theTransform.position, destination, 0.02f * dropSpeed);
             yield return new WaitForSeconds(0.01f);
         }
+        //播放因为
+        AudioController.Instance.PlayAudioEffect("Audio/stoneFall",1);
     }
 
     void SetLayer(string str)
@@ -210,8 +212,10 @@ public class Box : MonoBehaviour {
     }
 
     public void EndMove()
-    {   
+    {
         //transform.position = MathCalulate.GetHalfVector2(transform.position);
+        //停止
+        AudioController.Instance.StopCertainMusics("Audio/push");
         theTransform.SetParent(parent);
         if (mask.IsInRectangle(theTransform.position))
         {

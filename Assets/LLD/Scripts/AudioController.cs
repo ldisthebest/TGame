@@ -46,11 +46,11 @@ public class AudioController : MonoBehaviour {
         AudioSource audioSource = GetFreeAudioSource();
         audioSource.clip = audioClip;
         audioSource.loop = true;
-        audioSource.volume = 0;
+        //audioSource.volume = 0;
         audioSource.Play();
-        if (strengthen != null)
-            StopCoroutine(strengthen);
-        strengthen = StartCoroutine(Strengthen(audioSource));
+        //if (strengthen != null)
+        //    StopCoroutine(strengthen);
+        //strengthen = StartCoroutine(Strengthen(audioSource));
     }
 
     public void PlayMusic(AudioClip audioClip, float volumn)
@@ -61,6 +61,7 @@ public class AudioController : MonoBehaviour {
 
     public void PlayMusic(string str)
     {
+        Debug.Log("PlayMusic");
         AudioClip ac = Resources.Load<AudioClip>(str);
         PlayMusic(ac);
     }
@@ -111,6 +112,19 @@ public class AudioController : MonoBehaviour {
     public void PlayAudioEffect(AudioClip audioClip,float volume)
     {
         AudioSource.PlayClipAtPoint(audioClip, Camera.main.transform.position,volume);
+    }
+    public void PlayAudioEffect(string str, float volume)
+    {
+        AudioClip ac = Resources.Load<AudioClip>(str);
+        AudioSource.PlayClipAtPoint(ac, Camera.main.transform.position, volume);
+    }
+    public void PlayAudioEffect(string str)
+    {
+        PlayAudioEffect(str, 1);
+    }
+    public void PlayAudioEffect(AudioClip audioClip)
+    {
+        PlayAudioEffect(audioClip,1);
     }
     #endregion
 

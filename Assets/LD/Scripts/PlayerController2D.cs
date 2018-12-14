@@ -113,7 +113,7 @@ public class PlayerController2D : MonoBehaviour {
 
     #endregion
 
-
+    bool isPlayPush = false;
     
 
     #region 初始化
@@ -606,6 +606,13 @@ public class PlayerController2D : MonoBehaviour {
         if (currentPos != routePoint[pointIndex])
         {
             playerTransform.position = Vector2.MoveTowards(currentPos, routePoint[pointIndex], Time.deltaTime * speed);
+            if(playerAction.IsPlayerWithBox() && !isPlayPush)
+            {
+                
+                //循环播放
+                AudioController.Instance.PlayMusic("Audio/push",3);
+                isPlayPush = true;
+            }
             if(OnMoveEvent != null)
             {
                 OnMoveEvent(playerTransform.position);
@@ -618,6 +625,7 @@ public class PlayerController2D : MonoBehaviour {
             //如果达到终点
             if ((Vector2)playerTransform.position == routePoint[routePoint.Count - 1])
             {
+                isPlayPush = false;
                 EndMove();
                 return;
             }

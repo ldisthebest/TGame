@@ -46,6 +46,16 @@ public class LevelManager : MonoBehaviour {
     [SerializeField]
     LevelMode levelmode;
 
+    [SerializeField]
+    Animation endBlack;
+
+    [SerializeField]
+    Animation endAnima;
+
+    public Transform currentSnow;
+
+    public Transform nextSnow;
+
     #endregion
 
     #region 非序列化的字段
@@ -109,7 +119,8 @@ public class LevelManager : MonoBehaviour {
             //到达章节最后一关
             if (currentLevel == levelPrefabPath.Length - 1)
             {
-                Debug.Log("Game Over");
+                StartCoroutine(End());
+                player.enabled = false;
                 return;
             }
 
@@ -136,6 +147,7 @@ public class LevelManager : MonoBehaviour {
             transform.position = Vector2.MoveTowards(transform.position, targetPos, Time.deltaTime * cameraMoveSpeed);
             yield return new WaitForSeconds(intervalTime);
         }
+        UpdateSnow();
         MathCalulate.UpdateScreeenRect(mainCamera);
         player.AutoMove(playerBeginPos[currentLevel]);
         if (currentLevel >= 2)
@@ -164,6 +176,29 @@ public class LevelManager : MonoBehaviour {
         {
             Destroy(pastlevel);
         }
+    }
+
+    void UpdateSnow()
+    {
+        currentSnow.position = cameraPos[currentLevel + 1];
+        Transform snow = currentSnow;
+        currentSnow = nextSnow;
+        nextSnow = snow;
+        
+    }
+
+    public void SnowMoveOutParent()
+    {
+        currentSnow.parent = null;
+        nextSnow.parent = null;
+    }
+
+    IEnumerator End()
+    {
+        yield return new WaitForSeconds(2);
+        endBlack.Play("EndFadeUp");
+        yield return new WaitForSeconds(1.5f);
+        endAnima.Play("EndFadeUp");
     }
 
 }
