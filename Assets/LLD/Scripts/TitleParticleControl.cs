@@ -14,19 +14,11 @@ public class TitleParticleControl : MonoBehaviour {
 		
 	}
 	
-	// Update is called once per frame
-	void Update () {
-		
-        if(Input.GetMouseButtonDown(0))
-        {
-            Action();
-        }
-	}
 
 
-    private void Action()
+    public void Action()
     {
         particleSystem.Play();
-        Destroy(title, 0.65f);
+        Destroy(title, 0.05f);
     }
 }

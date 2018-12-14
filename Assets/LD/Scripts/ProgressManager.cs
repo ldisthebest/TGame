@@ -6,7 +6,10 @@ using UnityEngine.UI;
 public class ProgressManager : MonoBehaviour {
 
     [SerializeField]
-    GameObject Menu;
+    TitleParticleControl title;
+
+    [SerializeField]
+    GameObject menu;
 
     [SerializeField]
     Image[] textGuide;
@@ -33,9 +36,9 @@ public class ProgressManager : MonoBehaviour {
         player.canPlayerControl = false;
 
         //player.PassLevelEvent += PassLevel;
-        player.OnMoveEvent += ShowMask;
-        player.EndMoveEvent += EventOnLevel3;
-        Time.timeScale = 3;
+        //player.OnMoveEvent += ShowMask;
+        //player.EndMoveEvent += EventOnLevel3;
+        //Time.timeScale = 3;
     }
 	
 	
@@ -49,9 +52,11 @@ public class ProgressManager : MonoBehaviour {
 
     public void StartGame()
     {
-        Destroy(Menu);
+        title.Action();
+        Destroy(title.gameObject,10);
         anima.Play("ViewDown");
-        StartCoroutine(EventOnLevel0());
+        Destroy(menu);
+        //StartCoroutine(EventOnLevel0());
         
     }
 

@@ -21,7 +21,7 @@ GameObject:
   - component: {fileID: 4797209188918794}
   - component: {fileID: 198275828130118000}
   - component: {fileID: 199992275039623798}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: NoiseDispersal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -37,7 +37,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4697913743464720}
   - component: {fileID: 212223002623223894}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: SD
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -54,7 +54,7 @@ GameObject:
   - component: {fileID: 4541574996149010}
   - component: {fileID: 198922339900382666}
   - component: {fileID: 199698920285158914}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: NoiseDispersal2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -71,7 +71,7 @@ GameObject:
   - component: {fileID: 4632892183468496}
   - component: {fileID: 198332539563676660}
   - component: {fileID: 199546877755747426}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: TitleParticle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -87,7 +87,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4976462730129972}
   - component: {fileID: 114597847058755776}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Title
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -104,7 +104,7 @@ GameObject:
   - component: {fileID: 4289209032938308}
   - component: {fileID: 198389222337205004}
   - component: {fileID: 199073324798880724}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Burst
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -121,7 +121,7 @@ GameObject:
   - component: {fileID: 4892674380263958}
   - component: {fileID: 198711371481762022}
   - component: {fileID: 199242375244162956}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: ShowAndHide
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -217,8 +217,8 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1505735592469088}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 1}
+  m_LocalPosition: {x: 0.019996643, y: 0.34000015, z: 0}
+  m_LocalScale: {x: 0.8, y: 0.8, z: 1}
   m_Children:
   - {fileID: 4632892183468496}
   - {fileID: 4697913743464720}
@@ -257,7 +257,7 @@ ParticleSystem:
   startDelay:
     serializedVersion: 2
     minMaxState: 0
-    scalar: 0.65
+    scalar: 0.05
     minScalar: 0
     maxCurve:
       serializedVersion: 2
@@ -9398,7 +9398,7 @@ ParticleSystem:
   startDelay:
     serializedVersion: 2
     minMaxState: 0
-    scalar: 0.75
+    scalar: 0.15
     minScalar: 0
     maxCurve:
       serializedVersion: 2
@@ -13988,7 +13988,7 @@ ParticleSystem:
   startDelay:
     serializedVersion: 2
     minMaxState: 0
-    scalar: 0.6
+    scalar: 0
     minScalar: 0
     maxCurve:
       serializedVersion: 2
@@ -14270,7 +14270,7 @@ ParticleSystem:
     startSizeY:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 1.5
+      scalar: 2.3
       minScalar: 1
       maxCurve:
         serializedVersion: 2
@@ -18578,7 +18578,7 @@ ParticleSystem:
   startDelay:
     serializedVersion: 2
     minMaxState: 0
-    scalar: 0.65
+    scalar: 0.05
     minScalar: 0
     maxCurve:
       serializedVersion: 2
