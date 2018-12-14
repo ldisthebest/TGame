@@ -35,6 +35,9 @@ public class LevelManager : MonoBehaviour {
     Vector2[] maskBorderSize;
 
     [SerializeField]
+    float[] inHalfSize;
+
+    [SerializeField]
     float cameraMoveSpeed;
 
     [SerializeField]
@@ -85,6 +88,7 @@ public class LevelManager : MonoBehaviour {
             {
                 mask.SetMaskPosAtScreenVertex();
                 //mask.SetMaskSize(Vector2.zero,Vector2.zero);
+                mask.SetMaskSize(maskBodySize[currentLevel], maskBorderSize[currentLevel], inHalfSize[currentLevel]);
             }
         }
         
@@ -136,7 +140,7 @@ public class LevelManager : MonoBehaviour {
         player.AutoMove(playerBeginPos[currentLevel]);
         if (currentLevel >= 2)
         {
-            mask.SetMaskSize(maskBodySize[currentLevel],maskBorderSize[currentLevel]);
+            mask.SetMaskSize(maskBodySize[currentLevel],maskBorderSize[currentLevel],inHalfSize[currentLevel]);
             mask.MoveToNewLevel();
         }
        

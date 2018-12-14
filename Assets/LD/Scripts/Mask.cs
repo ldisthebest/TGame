@@ -52,6 +52,10 @@ public class Mask : MonoBehaviour {
 
     Transform maskBorder;
 
+    Vector2 defaultBodySize, defaultBorderSize;
+
+    float defaultInHalfWidth;
+
     #endregion
 
     #region 公有字段
@@ -75,6 +79,9 @@ public class Mask : MonoBehaviour {
         hasDrag = false;
         hitted = false;
         getAttached = true;
+        defaultBodySize = maskBody.localScale;
+        defaultBorderSize = maskBorder.localScale;
+        defaultInHalfWidth = halfWidth;
         maskCollider.InitWorldColliders(GetOutMaskContour());
     }
 
@@ -94,12 +101,24 @@ public class Mask : MonoBehaviour {
         InitMask();
     }
 
-    public void SetMaskSize(Vector2 bodySize,Vector2 borderSize)
+    public void SetMaskSize(Vector2 bodySize,Vector2 borderSize,float inHalfWidth)
     {
         if (bodySize == Vector2.zero)
+        {
+            maskBody.localScale = defaultBodySize;
+            maskBorder.localScale = defaultBorderSize;
+            halfHeight = defaultInHalfWidth;
+            halfWidth = defaultInHalfWidth;
+            outHalfHeight = defaultInHalfWidth + 0.5f;
+            outHalfWidth = defaultInHalfWidth + 0.5f;
             return;
+        }
         maskBody.localScale = bodySize;
-        maskBorder.localScale = borderSize; 
+        maskBorder.localScale = borderSize;
+        halfHeight = inHalfWidth;
+        halfWidth = inHalfWidth;
+        outHalfHeight = inHalfWidth + 0.5f;
+        outHalfWidth = inHalfWidth + 0.5f;
 
     }
 
