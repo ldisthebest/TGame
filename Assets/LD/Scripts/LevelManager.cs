@@ -68,7 +68,7 @@ public class LevelManager : MonoBehaviour {
         colliderManager = mask.GetComponent<MaskCollider>();
         player.PassLevelEvent += PassLevel;
 
-        MathCalulate.UpdateScreeenRect(mainCamera);
+        
         player.SetInitialPos(playerBeginPos[currentLevel]);
 
         InitSceneItemPos();     
@@ -76,10 +76,11 @@ public class LevelManager : MonoBehaviour {
 
     void InitSceneItemPos()
     {
-        if(levelmode == LevelMode.debug)
+        
+        if (levelmode == LevelMode.debug)
         {
             transform.position = cameraPos[currentLevel];
-
+            MathCalulate.UpdateScreeenRect(mainCamera);
             if (currentLevel != 0)
             {
                 mask.SetMaskPosAtScreenVertex();
@@ -92,6 +93,8 @@ public class LevelManager : MonoBehaviour {
             LoadNextLevel();
             colliderManager.UpdateColliderList(nowlevel.transform);
         }
+
+       
     }
 
     void PassLevel(Vector2 playerPos)
